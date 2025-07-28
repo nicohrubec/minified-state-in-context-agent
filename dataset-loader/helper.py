@@ -27,6 +27,7 @@ def parse_arguments():
     parser.add_argument(
         "--split", type=str, default="test", choices=["train", "dev", "test"]
     )
+    parser.add_argument("--sample", type=float, default=1.0)
     return parser.parse_args()
 
 
