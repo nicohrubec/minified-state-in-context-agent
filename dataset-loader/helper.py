@@ -8,11 +8,13 @@ import tokenize
 import token
 import io
 import copy
+import re
 
 from swebench_problem import _SWEBenchProblem, CodebaseContent, FileInCodebase
 
 
 VALID_EXTENSIONS = {"py"}
+TEST_FOLDER_PATTERN = re.compile(r"(?:^|[_\-/\\])(?:test|tests|testing)(?:$|[_\-/\\])", re.IGNORECASE)
 
 
 def parse_arguments():
@@ -95,6 +97,13 @@ def remove_comments(input_source: str) -> str:
     return source_flag
 
 
+def is_testing_path(path: Path) -> bool:
+    for part in path.parts:
+        if TEST_FOLDER_PATTERN.search(part):
+            return True
+    return False
+
+
 def get_codebase_content(
     problem: _SWEBenchProblem, repos_dir: Path, hash_to_content: Dict[str, str]
 ) -> CodebaseContent:
@@ -112,7 +121,7 @@ def get_codebase_content(
     contexts = []
 
     for file_path in repo_path.rglob("*"):
-        if not file_path.is_file:
+        if not file_path.is_file():
             continue
 
         if file_path.suffix[1:] not in VALID_EXTENSIONS:  # [1:] excludes the '.'
@@ -122,6 +131,9 @@ def get_codebase_content(
             content = file_path.read_text()
         except UnicodeDecodeError:
             # Ignore these files.
+            continue
+
+        if is_testing_path(file_path.relative_to(repo_path)):
             continue
 
         content = remove_comments(content)
