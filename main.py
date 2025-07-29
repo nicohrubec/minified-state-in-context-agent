@@ -1,7 +1,6 @@
 import argparse
 from datasets import load_dataset
 import os
-import tiktoken
 import datasets
 
 from agent.run import run_agent
@@ -38,12 +37,6 @@ def load_data(args):
     )
 
     return hash_to_content, problem_files, problems
-
-
-def count_tokens(string):
-    encoder = tiktoken.get_encoding("cl100k_base")  # gpt-4 tokenizer
-    tokens = encoder.encode(string)
-    return len(tokens)
 
 
 def main():
