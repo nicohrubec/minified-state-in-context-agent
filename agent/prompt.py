@@ -9,9 +9,8 @@ def build_repair_prompt(problem, problem_files, hash_to_content):
         all_sources.append(f"### {path}\n{content}")
     all_sources_str = "\n\n".join(all_sources)
 
-    prompt = f"""You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description.
-
-# REPOSITORY STRUCTURE:
+    system_prompt = "You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description."
+    user_prompt = f"""# REPOSITORY STRUCTURE:
 --------------------
 {all_sources_str}
 --------------------
@@ -56,4 +55,4 @@ The format should be as follows:
 
 Ensure that your chain‑of‑thought reasoning is clearly separated from the final patch. Do not include any evaluation or commentary beyond the four requested steps.
 """
-    return prompt
+    return system_prompt, user_prompt
