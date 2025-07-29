@@ -14,7 +14,7 @@ def parse_arguments():
         default="nicohrubec/codebase-content-SWE-bench_Verified",
     )
     parser.add_argument("--swe_bench_split", type=str, default="SWE-bench_Verified")
-    parser.add_argument("--split", type=str, default="test")
+    parser.add_argument("--split", type=str, default="test_s0_01")
     return parser.parse_args()
 
 
@@ -33,7 +33,7 @@ def load_data(args):
         token=os.environ.get("HF_TOKEN"),
     )
     problems = datasets.load_dataset(
-        f"princeton-nlp/{args.swe_bench_split}", split=args.split
+        f"princeton-nlp/{args.swe_bench_split}", split="test"
     )
 
     return hash_to_content, problem_files, problems
