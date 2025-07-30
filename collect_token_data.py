@@ -13,6 +13,9 @@ from agent.prompt import build_repair_prompt
 from shared.tokens import count_tokens
 
 
+file_types = ["test", "docs", "bench", "build", "config"]
+
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -62,9 +65,9 @@ def main():
     output_dir = args.output_directory
     output_dir.mkdir(exist_ok=True, parents=True)
 
-    # analyze natural language to code token ratio in prompts
     repository_to_nl_tokens = defaultdict(list)
     repository_to_code_tokens = defaultdict(list)
+    repository_to_file_type_tokens = defaultdict(lambda: defaultdict(list))
     repositories = set()
 
     for problem, files in tqdm(
@@ -87,8 +90,20 @@ def main():
         repository_to_nl_tokens[repository].append(nl_tokens)
         repository_to_code_tokens[repository].append(code_tokens)
 
+        instance_filetype_tokens = defaultdict(int)
+
+        for file in files["files"]:
+            file_type = file["file_type"]
+            file_hash = file["content_hash"]
+            content = hash_to_content[file_hash]
+            file_tokens = count_tokens(content)
+            instance_filetype_tokens[file_type] += file_tokens
+
+        for file_type, token_sum in instance_filetype_tokens.items():
+            repository_to_file_type_tokens[repository][file_type].append(token_sum)
+
     rows = []
-    for repository in tqdm(repositories, desc="Store mean and std"):
+    for repository in tqdm(repositories, desc="Store aggregate statistics"):
         nl_values = repository_to_nl_tokens[repository]
         code_values = repository_to_code_tokens[repository]
 
@@ -97,18 +112,23 @@ def main():
         code_mean = np.mean(code_values)
         code_std = np.std(code_values)
 
-        rows.append(
-            {
-                "repository": repository,
-                "nl_mean": nl_mean,
-                "nl_std": nl_std,
-                "token_mean": code_mean,
-                "token_std": code_std,
-            }
-        )
+        row = {
+            "repository": repository,
+            "nl_mean": nl_mean,
+            "nl_std": nl_std,
+            "code_mean": code_mean,
+            "code_std": code_std,
+        }
+
+        for file_type in file_types:
+            token_counts = repository_to_file_type_tokens[repository].get(file_type, [])
+            row[f"{file_type}_mean"] = np.mean(token_counts) if token_counts else 0.0
+            row[f"{file_type}_std"] = np.std(token_counts) if token_counts else 0.0
+
+        rows.append(row)
 
     df = pd.DataFrame(rows)
-    output_file = output_dir / f"nl_code_{args.swe_bench_split}_{args.split}.csv"
+    output_file = output_dir / f"{args.swe_bench_split}_{args.split}.csv"
     df.to_csv(output_file, index=False)
 
 
