@@ -1,6 +1,6 @@
 from agent.prompt import build_repair_prompt
 from agent.llm import call_gpt
-from agent.tokens import count_tokens
+from shared.tokens import count_tokens
 
 
 def run_agent(problem, problem_files, hash_to_content):
