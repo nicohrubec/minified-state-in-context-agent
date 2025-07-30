@@ -36,6 +36,10 @@ def load_data(args):
         f"princeton-nlp/{args.swe_bench_split}", split="test"
     )
 
+    # select relevant instance_ids from problems
+    instance_ids = set(problem_files["instance_id"])
+    problems = problems.filter(lambda x: x["instance_id"] in instance_ids)
+
     return hash_to_content, problem_files, problems
 
 
