@@ -13,7 +13,7 @@ from agent.prompt import build_repair_prompt
 from shared.tokens import count_tokens
 
 
-file_types = ["test", "docs", "bench", "build", "config"]
+file_types = ["core", "test", "docs", "config", "bench", "build"]
 
 
 def parse_arguments():
