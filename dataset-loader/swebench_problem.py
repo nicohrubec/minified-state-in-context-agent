@@ -25,6 +25,7 @@ class _SWEBenchProblem:
 class FileInCodebase:
     file_path: str
     content_hash: str
+    file_type: str
 
 
 @dataclass

@@ -45,7 +45,6 @@ def main():
 
     for problem, files in zip(problems, problem_files):
         run_agent(problem, files, hash_to_content)
-        break
 
 
 if __name__ == "__main__":
