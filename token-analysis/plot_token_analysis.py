@@ -88,6 +88,43 @@ def plot_mean_file_type_distribution(df):
     plt.show()
 
 
+def plot_stacked_token_counts_by_repo(df):
+    # Filter relevant columns
+    cols = ["repository", "code_mean"] + [f"{ft}_mean" for ft in file_types]
+    df = df[cols].copy()
+
+    # Normalize: ensure file-type counts sum to code_mean (minor correction for rounding errors)
+    for idx, row in df.iterrows():
+        ft_sum = sum(row[f"{ft}_mean"] for ft in file_types)
+        code_total = row["code_mean"]
+        if ft_sum == 0:
+            raise ValueError(f"Repository {row['repository']} has zero file-type token count.")
+        scale = code_total / ft_sum
+        for ft in file_types:
+            df.at[idx, f"{ft}_mean"] *= scale
+
+    # Sort by total code_mean ascending
+    df = df.sort_values("code_mean", ascending=True).reset_index(drop=True)
+
+    df_stacked = df.set_index("repository")[[f"{ft}_mean" for ft in file_types]]
+    df_stacked.columns = file_types  # drop "_mean" suffix
+
+    sns.set(style="whitegrid", context="talk")
+    ax = df_stacked.plot(
+        kind="bar",
+        stacked=True,
+        figsize=(10, 6),
+        colormap="tab20c"
+    )
+
+    ax.set_ylabel("Token Count")
+    ax.set_title("Code Token Count per Repository by File Type", fontsize=16)
+    ax.legend(title="File Type", bbox_to_anchor=(1.05, 1), loc="upper left")
+
+    plt.tight_layout()
+    plt.show()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -99,3 +136,4 @@ if __name__ == "__main__":
     data = pd.read_csv(args.file)
     plot_token_type_percentages(data)
     plot_mean_file_type_distribution(data)
+    plot_stacked_token_counts_by_repo(data)
