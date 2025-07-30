@@ -55,4 +55,4 @@ The format should be as follows:
 
 Ensure that your chain‑of‑thought reasoning is clearly separated from the final patch. Do not include any evaluation or commentary beyond the four requested steps.
 """
-    return system_prompt, user_prompt
+    return system_prompt, user_prompt, all_sources_str

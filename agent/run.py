@@ -5,7 +5,7 @@ from shared.tokens import count_tokens
 
 def run_agent(problem, problem_files, hash_to_content):
     print(f"Running agent for problem {problem['instance_id']}")
-    system_prompt, user_prompt = build_repair_prompt(
+    system_prompt, user_prompt, _ = build_repair_prompt(
         problem, problem_files, hash_to_content
     )
     num_tokens = count_tokens(system_prompt + user_prompt)
