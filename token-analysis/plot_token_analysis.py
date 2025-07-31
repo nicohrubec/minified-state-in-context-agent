@@ -31,7 +31,9 @@ def plot_token_type_percentages(df):
 
     sns.set(style="whitegrid", context="talk")
     plt.figure(figsize=(6, 6))
-    ax = sns.barplot(data=data, x="Token Type", y="Percentage", hue="Token Type", palette="muted")
+    ax = sns.barplot(
+        data=data, x="Token Type", y="Percentage", hue="Token Type", palette="muted"
+    )
 
     # Set y-axis to max of data + small margin
     max_pct = data["Percentage"].max()
@@ -70,14 +72,18 @@ def plot_mean_file_type_distribution(df):
         file_type: 100 * count / total for file_type, count in file_type_means.items()
     }
 
-    data = pd.DataFrame({
-        "File Type": list(percentages.keys()),
-        "Percentage": list(percentages.values()),
-    })
+    data = pd.DataFrame(
+        {
+            "File Type": list(percentages.keys()),
+            "Percentage": list(percentages.values()),
+        }
+    )
 
     sns.set(style="whitegrid", context="talk")
     plt.figure(figsize=(8, 6))
-    ax = sns.barplot(data=data, x="File Type", y="Percentage", hue="File Type", palette="pastel")
+    ax = sns.barplot(
+        data=data, x="File Type", y="Percentage", hue="File Type", palette="pastel"
+    )
 
     for p, pct in zip(ax.patches, data["Percentage"]):
         ax.annotate(
@@ -105,7 +111,9 @@ def plot_stacked_token_counts_by_repo(df):
         ft_sum = sum(row[f"{ft}_mean"] for ft in file_types)
         code_total = row["code_mean"]
         if ft_sum == 0:
-            raise ValueError(f"Repository {row['repository']} has zero file-type token count.")
+            raise ValueError(
+                f"Repository {row['repository']} has zero file-type token count."
+            )
         scale = code_total / ft_sum
         for ft in file_types:
             df.at[idx, f"{ft}_mean"] *= scale
@@ -117,12 +125,7 @@ def plot_stacked_token_counts_by_repo(df):
     df_stacked.columns = file_types  # drop "_mean" suffix
 
     sns.set(style="whitegrid", context="talk")
-    ax = df_stacked.plot(
-        kind="bar",
-        stacked=True,
-        figsize=(10, 6),
-        colormap="tab20c"
-    )
+    ax = df_stacked.plot(kind="bar", stacked=True, figsize=(10, 6), colormap="tab20c")
 
     ax.set_ylabel("Token Count")
     ax.set_title("Code Token Count per Repository by File Type", fontsize=16)
