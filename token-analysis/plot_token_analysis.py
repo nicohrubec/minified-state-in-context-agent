@@ -8,6 +8,13 @@ file_types = ["core", "test", "docs", "config", "bench", "build"]
 
 
 def plot_token_type_percentages(df):
+    include_file_types = ["core"]
+    exclude_file_types = list(set(file_types) - set(include_file_types))
+
+    for file_type in exclude_file_types:
+        file_type_col = f"{file_type}_mean"
+        df["code_mean"] = df["code_mean"] - df[file_type_col]
+
     total_nl = df["nl_mean"].sum()
     total_code = df["code_mean"].sum()
     total_tokens = total_nl + total_code
@@ -24,7 +31,7 @@ def plot_token_type_percentages(df):
 
     sns.set(style="whitegrid", context="talk")
     plt.figure(figsize=(6, 6))
-    ax = sns.barplot(data=data, x="Token Type", y="Percentage", palette="muted")
+    ax = sns.barplot(data=data, x="Token Type", y="Percentage", hue="Token Type", palette="muted")
 
     # Set y-axis to max of data + small margin
     max_pct = data["Percentage"].max()
@@ -70,7 +77,7 @@ def plot_mean_file_type_distribution(df):
 
     sns.set(style="whitegrid", context="talk")
     plt.figure(figsize=(8, 6))
-    ax = sns.barplot(data=data, x="File Type", y="Percentage", palette="pastel")
+    ax = sns.barplot(data=data, x="File Type", y="Percentage", hue="File Type", palette="pastel")
 
     for p, pct in zip(ax.patches, data["Percentage"]):
         ax.annotate(
