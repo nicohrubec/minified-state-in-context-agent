@@ -25,8 +25,7 @@ BENCH_PATTERN = re.compile(
 )
 BUILD_PATTERN = re.compile(r"(?:^|[_\-/\\])build(?:$|[_\-/\\])", re.IGNORECASE)
 CONFIG_PATTERN = re.compile(
-    r"(?:^|[_\-/\\])(?:config(?:uration)?|conf|__main__|__init__)(?:$|[_\-/\\])",
-    re.IGNORECASE,
+    r"(?i)(?:^|[/\\_\-])(?:config(?:uration)?|conf|__main__|__init__)(?:[/\\_\-]|$|\.py$)"
 )
 
 
