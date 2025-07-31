@@ -166,7 +166,12 @@ def get_codebase_content(
             continue
 
         file_type = assign_file_type(file_path.relative_to(repo_path))
-        content = remove_comments(content)
+
+        try:
+            content = remove_comments(content)
+        except tokenize.TokenError:
+            continue
+
         content_hash = hash_file_content(content)
         if content_hash not in hash_to_content:
             hash_to_content[content_hash] = content
