@@ -1,7 +1,6 @@
 import os
 import argparse
-import datasets
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from collections import defaultdict
 import numpy as np
 from tqdm import tqdm
@@ -30,25 +29,49 @@ def parse_arguments():
     )
     parser.add_argument("--swe_bench_split", type=str, default="SWE-bench_Verified")
     parser.add_argument("--split", type=str, default="test_s0_01")
+    parser.add_argument(
+        "--dataset_directory",
+        type=Path,
+        default="/Users/nicolashrubec/dev/agent-state-management/data/hf_datasets",
+    )
     return parser.parse_args()
 
 
 def load_data(args):
-    file_content = load_dataset(
-        args.repository_dataset_name,
-        "file_content",
-        split=args.split,
-        token=os.environ.get("HF_TOKEN"),
-    )
+    local_base_path = args.dataset_directory / args.repository_dataset_name / args.split
+
+    local_file_content_path = local_base_path / "file_content"
+    local_problem_files_path = local_base_path / "problem_files"
+
+    if local_file_content_path.exists() and local_problem_files_path.exists():
+        print(
+            f"Loading file_content and problem_files from local disk: {local_base_path}"
+        )
+        file_content = load_from_disk(str(local_file_content_path))
+        problem_files = load_from_disk(str(local_problem_files_path))
+    else:
+        print(
+            f"Loading file_content and problem_files from Hugging Face: {args.repository_dataset_name}"
+        )
+        file_content = load_dataset(
+            args.repository_dataset_name,
+            "file_content",
+            split=args.split,
+            token=os.environ.get("HF_TOKEN"),
+        )
+        problem_files = load_dataset(
+            args.repository_dataset_name,
+            "problem_files",
+            split=args.split,
+            token=os.environ.get("HF_TOKEN"),
+        )
+
     hash_to_content = {row["hash"]: row["content"] for row in file_content}
-    problem_files = load_dataset(
-        args.repository_dataset_name,
-        "problem_files",
-        split=args.split,
+
+    problems = load_dataset(
+        f"princeton-nlp/{args.swe_bench_split}",
+        split="test",
         token=os.environ.get("HF_TOKEN"),
-    )
-    problems = datasets.load_dataset(
-        f"princeton-nlp/{args.swe_bench_split}", split="test"
     )
 
     # select relevant instance_ids from problems

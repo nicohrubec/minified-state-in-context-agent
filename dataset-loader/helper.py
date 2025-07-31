@@ -38,6 +38,11 @@ def parse_arguments():
         default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
     )
     parser.add_argument(
+        "--dataset_directory",
+        type=Path,
+        default="/Users/nicolashrubec/dev/agent-state-management/data/hf_datasets",
+    )
+    parser.add_argument(
         "--output_dataset_prefix",
         type=str,
         default="nicohrubec/codebase-content",
@@ -47,6 +52,7 @@ def parse_arguments():
         "--split", type=str, default="test", choices=["train", "dev", "test"]
     )
     parser.add_argument("--sample", type=float, default=1.0)
+    parser.add_argument("--push_to_hub", action="store_true")
     return parser.parse_args()
 
 
