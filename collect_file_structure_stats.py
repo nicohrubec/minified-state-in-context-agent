@@ -121,9 +121,11 @@ def main():
             file_hash = file["content_hash"]
             content = hash_to_content[file_hash]
             try:
-                file_lexical_token_usage, file_structural_token_usage, file_total_chars = (
-                    analyze_file_structure(content)
-                )
+                (
+                    file_lexical_token_usage,
+                    file_structural_token_usage,
+                    file_total_chars,
+                ) = analyze_file_structure(content)
             except (IndentationError, SyntaxError):
                 num_skipped_files += 1
                 continue
@@ -138,10 +140,14 @@ def main():
 
         # unwrap token usage dicts into separate keys, so they are stored as individual columns in df
         for token_type in problem_lexical_token_usage["token_usage"]:
-            problem_lexical_token_usage[token_type] = problem_lexical_token_usage["token_usage"][token_type]
+            problem_lexical_token_usage[token_type] = problem_lexical_token_usage[
+                "token_usage"
+            ][token_type]
         del problem_lexical_token_usage["token_usage"]
         for token_type in problem_structural_token_usage["token_usage"]:
-            problem_structural_token_usage[token_type] = problem_structural_token_usage["token_usage"][token_type]
+            problem_structural_token_usage[token_type] = problem_structural_token_usage[
+                "token_usage"
+            ][token_type]
         del problem_structural_token_usage["token_usage"]
 
         problem_lexical_token_usage["total_chars"] = problem_total_chars
@@ -163,7 +169,9 @@ def main():
     )
     structural_df.to_csv(structural_output_file, index=False)
 
-    print(f"Skipped {(num_skipped_files / num_files) * 100:.2f}% of files due to parsing issues.")
+    print(
+        f"Skipped {(num_skipped_files / num_files) * 100:.2f}% of files due to parsing issues."
+    )
 
 
 if __name__ == "__main__":
