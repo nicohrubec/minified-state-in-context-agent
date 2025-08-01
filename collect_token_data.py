@@ -28,7 +28,7 @@ def parse_arguments():
         default="nicohrubec/codebase-content-SWE-bench_Verified",
     )
     parser.add_argument("--swe_bench_split", type=str, default="SWE-bench_Verified")
-    parser.add_argument("--split", type=str, default="test_s0_01")
+    parser.add_argument("--split", type=str, default="test")
     parser.add_argument(
         "--dataset_directory",
         type=Path,

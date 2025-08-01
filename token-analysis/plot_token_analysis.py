@@ -4,11 +4,11 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-file_types = ["core", "test", "docs", "config", "bench", "build"]
+file_types = ["core", "config", "test", "docs", "bench", "build"]
 
 
 def plot_token_type_percentages(df):
-    include_file_types = ["core"]
+    include_file_types = ["core", "config"]
     exclude_file_types = list(set(file_types) - set(include_file_types))
 
     for file_type in exclude_file_types:
@@ -77,7 +77,7 @@ def plot_mean_file_type_distribution(df):
             "File Type": list(percentages.keys()),
             "Percentage": list(percentages.values()),
         }
-    )
+    ).sort_values(by="Percentage", ascending=True)
 
     sns.set(style="whitegrid", context="talk")
     plt.figure(figsize=(8, 6))
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--file",
         help="CSV file with repository statistics",
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token-analysis/SWE-bench_Verified_test_s0_01.csv",
+        default="/Users/nicolashrubec/dev/agent-state-management/data/token-analysis/SWE-bench_Verified_test.csv",
     )
     args = parser.parse_args()
     data = pd.read_csv(args.file)
