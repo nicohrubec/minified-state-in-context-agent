@@ -151,7 +151,7 @@ def main():
         rows.append(row)
 
     df = pd.DataFrame(rows)
-    output_file = output_dir / f"{args.swe_bench_split}_{args.split}.csv"
+    output_file = output_dir / f"file_type_{args.swe_bench_split}_{args.split}.csv"
     df.to_csv(output_file, index=False)
 
 

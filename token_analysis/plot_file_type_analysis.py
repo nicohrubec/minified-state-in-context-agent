@@ -140,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--file",
         help="CSV file with repository statistics",
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token-analysis/SWE-bench_Verified_test.csv",
+        default="/Users/nicolashrubec/dev/agent-state-management/data/token-analysis/file_type_SWE-bench_Verified_test.csv",
     )
     args = parser.parse_args()
     data = pd.read_csv(args.file)
