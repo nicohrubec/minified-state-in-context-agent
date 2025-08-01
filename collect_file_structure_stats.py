@@ -109,6 +109,7 @@ def main():
             "repository": repository,
             "token_usage": defaultdict(int),
         }
+        problem_total_chars = 0
 
         for file in files["files"]:
             file_type = file["file_type"]
@@ -120,10 +121,10 @@ def main():
             file_hash = file["content_hash"]
             content = hash_to_content[file_hash]
             try:
-                file_lexical_token_usage, file_structural_token_usage, total_chars = (
+                file_lexical_token_usage, file_structural_token_usage, file_total_chars = (
                     analyze_file_structure(content)
                 )
-            except IndentationError:
+            except (IndentationError, SyntaxError):
                 num_skipped_files += 1
                 continue
 
@@ -133,6 +134,7 @@ def main():
                 problem_structural_token_usage["token_usage"][structural_unit] += (
                     num_tokens
                 )
+            problem_total_chars += file_total_chars
 
         # unwrap token usage dicts into separate keys, so they are stored as individual columns in df
         for token_type in problem_lexical_token_usage["token_usage"]:
@@ -141,6 +143,9 @@ def main():
         for token_type in problem_structural_token_usage["token_usage"]:
             problem_structural_token_usage[token_type] = problem_structural_token_usage["token_usage"][token_type]
         del problem_structural_token_usage["token_usage"]
+
+        problem_lexical_token_usage["total_chars"] = problem_total_chars
+        problem_structural_token_usage["total_chars"] = problem_total_chars
 
         lexical_token_usage.append(problem_lexical_token_usage)
         structural_token_usage.append(problem_structural_token_usage)
