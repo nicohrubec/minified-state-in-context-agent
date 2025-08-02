@@ -1,5 +1,6 @@
 import os
 import sys  # system module
+import logging
 
 
 # This is a class example
@@ -7,14 +8,24 @@ class ExampleClass(Base1, Base2):
     """This class demonstrates method signatures and docstrings."""
 
     class_var = 42
+    logging.debug("debug")
 
     def __init__(self, name: str, value: int = 10):
         self.name = name
         self.value = value
+        print("Hello!")
 
+        if self.name == "Hello":
+            print("World!")
+
+        for i in range(10):
+            print("World!")
+
+    @abc
     def compute(self, factor: float) -> float:
         """Compute a scaled value."""
         result = (self.value + 3.14) * factor
+        a: int = 6
         return result
 
 
