@@ -16,11 +16,8 @@ def call_gpt(system_prompt, user_prompt):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_completion_tokens=1000,
-        temperature=1.0,
-        top_p=1.0,
-        frequency_penalty=0.0,
-        presence_penalty=0.0,
+        max_completion_tokens=10000,
+        temperature=0.8,
         model=deployment,
     )
     return response.choices[0].message.content

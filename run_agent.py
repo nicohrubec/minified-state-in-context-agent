@@ -72,6 +72,7 @@ def main():
     hash_to_content, problem_files, problems = load_data(args)
 
     for problem, files in zip(problems, problem_files):
+        files["files"] = [file for file in files["files"] if file["file_type"] in ["core", "config"]]
         run_agent(problem, files, hash_to_content)
 
 
