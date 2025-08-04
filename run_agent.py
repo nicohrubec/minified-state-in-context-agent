@@ -1,7 +1,6 @@
 import argparse
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 import os
-import datasets
 from pathlib import Path
 
 from agent.run import run_agent
