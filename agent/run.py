@@ -57,48 +57,47 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=60000):
     # 1. file ranking
     prompt = build_file_ranking_prompt(problem, problem_files)
     num_ranking_input_tokens = count_tokens(prompt)
-    print(f"The ranking prompt has {num_ranking_input_tokens} input tokens")
     response = call_gpt("", prompt)
     num_ranking_output_tokens = count_tokens(response)
-    print(f"The ranking output has {num_ranking_output_tokens} output tokens")
 
     # 2. filter based on ranking
     ranked_paths = [line.strip() for line in response.splitlines() if line.strip()]
     problem_files, selected_paths = filter_problem_files_with_ranking(
         problem_files, hash_to_content, ranked_paths, token_limit
     )
-    print(f"{len(problem_files['files'])} files were selected")
 
     # get recall of preprocessing
     patch_text = problem["patch"]
     target_files = extract_target_files_from_patch(patch_text)
 
     num_found_target_files = len(set(selected_paths).intersection(target_files))
-    print(ranked_paths)
-    print(num_found_target_files)
-    print(target_files)
     recall = num_found_target_files / len(target_files)
-    print(f"Recall: {recall:.3f}")
 
     # problem solving
     system_prompt, user_prompt, _ = build_repair_prompt(
         problem, problem_files, hash_to_content
     )
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
-    print(f"The repair prompt has {num_repair_input_tokens} tokens")
     response = call_gpt(system_prompt, user_prompt)
     num_repair_output_tokens = count_tokens(response)
-    print(f"The repair output has {num_repair_output_tokens} output tokens")
-    print(response)
 
-    print(f"The input has {num_ranking_input_tokens + num_repair_input_tokens} tokens")
-    print(
-        f"the output has {num_ranking_output_tokens + num_repair_output_tokens} tokens"
-    )
-    print(
-        f"The preprocessing has {num_ranking_input_tokens + num_ranking_output_tokens} tokens"
-    )
-    print(
-        f"The repair has {num_repair_input_tokens + num_repair_output_tokens} tokens"
-    )
+    print(response)
     # TODO: get patch in correct format and return it
+
+    print(f"The ranking prompt has {num_ranking_input_tokens} input tokens")
+    print(f"The ranking output has {num_ranking_output_tokens} output tokens")
+    print(f"The repair prompt has {num_repair_input_tokens} tokens")
+    print(f"The repair output has {num_repair_output_tokens} output tokens")
+    print(f"{len(problem_files['files'])} files were selected")
+    print(f"Recall: {recall:.3f}")
+
+    return {
+        "num_ranking_input_tokens": num_ranking_input_tokens,
+        "num_ranking_output_tokens": num_ranking_output_tokens,
+        "num_repair_input_tokens": num_repair_input_tokens,
+        "num_repair_output_tokens": num_repair_output_tokens,
+        "num_selected_files": len(problem_files['files']),
+        "num_target_files": len(target_files),
+        "num_selected_target_files": num_found_target_files,
+        "recall": recall,
+    }

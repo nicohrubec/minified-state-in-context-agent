@@ -2,6 +2,7 @@ import argparse
 from datasets import load_dataset, load_from_disk
 import os
 from pathlib import Path
+import pandas as pd
 
 from agent.run import run_agent
 
@@ -19,6 +20,11 @@ def parse_arguments():
         "--dataset_directory",
         type=Path,
         default="/Users/nicolashrubec/dev/agent-state-management/data/hf_datasets",
+    )
+    parser.add_argument(
+        "--output_directory",
+        type=Path,
+        default="/Users/nicolashrubec/dev/agent-state-management/data/agent_results",
     )
     return parser.parse_args()
 
@@ -73,10 +79,22 @@ def main():
     args = parse_arguments()
     hash_to_content, problem_files, problems = load_data(args)
 
+    output_dir = args.output_directory
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    metrics = []
+
     for problem, files in zip(problems, problem_files):
-        run_agent(problem, files, hash_to_content)
-        # TODO: store prediction in csv
+        instance_metrics = run_agent(problem, files, hash_to_content)
+        # TODO: store patch in csv
+        metrics.append(instance_metrics)
         break
+
+    metrics_df = pd.DataFrame(metrics)
+    metrics_output_file = (
+            output_dir / f"metrics_{args.swe_bench_split}_{args.split}.csv"
+    )
+    metrics_df.to_csv(metrics_output_file, index=False)
 
 
 if __name__ == "__main__":
