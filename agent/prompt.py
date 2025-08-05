@@ -1,3 +1,48 @@
+def build_file_ranking_prompt(problem, problem_files):
+    problem_statement = problem["problem_statement"]
+
+    # build repo structure
+    structure_lines = []
+    for file in problem_files["files"]:
+        structure_lines.append(file["file_path"])
+    structure = "\n".join(structure_lines)
+
+    prompt = f"""Please look through the following GitHub problem description and 
+    Repository structure and provide a ranked list of files or 
+    subfolders from the most relevant to the least relevant for 
+    fixing the problem.
+
+Note that you should focus on providing specific files or the 
+    lowest subfolder in the tree. Avoid listing a folder that 
+    contains many files; instead, break it down to the most 
+    granular and relevant components.
+
+### GitHub Problem Description ###
+{problem_statement}
+
+### Repository Structure ###
+{structure}
+
+###
+
+Please provide the ranked list with the most relevant item first
+    and the least relevant item last.
+Always output all files that were given to you in the structure.
+    Do not omit any files.
+The returned list should be separated by new lines and wrapped
+    with```.
+    For example:
+    ```
+    file1 . py
+    folder2 / file3 . py
+    folder4 / subfolder5 /
+    folder6 / file7 . py
+    ```
+    """
+
+    return prompt
+
+
 def build_repair_prompt(problem, problem_files, hash_to_content):
     problem_statement = problem["problem_statement"]
 
