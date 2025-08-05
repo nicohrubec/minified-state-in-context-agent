@@ -1,3 +1,6 @@
+import re
+import difflib
+
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
 from shared.tokens import count_tokens
@@ -38,14 +41,108 @@ def filter_problem_files_with_ranking(
 def extract_target_files_from_patch(patch_text):
     target_files = set()
     for line in patch_text.splitlines():
-        if line.startswith('+++ b/'):
-            path = line[len('+++ b/'):].strip()
+        if line.startswith("+++ b/"):
+            path = line[len("+++ b/") :].strip()
             if path:
                 target_files.add(path)
     return target_files
 
 
-def run_agent(problem, problem_files, hash_to_content, token_limit=60000):
+def extract_cot_sections(response):
+    localization, repair = "", ""
+    localization_match = re.search(
+        r"Chain-of-Thought for Localization\s*-+\n(.*?)\n(?=Restated Relevant Code)",
+        response,
+        re.DOTALL,
+    )
+    repair_match = re.search(
+        r"Chain-of-Thought for Repairing the Code\s*-+\n(.*?)\n(?=Final Patch)",
+        response,
+        re.DOTALL,
+    )
+
+    if localization_match:
+        localization = localization_match.group(1).strip()
+    if repair_match:
+        repair = repair_match.group(1).strip()
+
+    return {
+        "localization": localization,
+        "repair": repair,
+    }
+
+
+def extract_final_patch_as_diff(response_text, files, hash_to_content):
+    file_path_to_content_hash = {
+        file["file_path"]: file["content_hash"] for file in files
+    }
+
+    file_match = re.search(
+        r"\*{0,2}Final Patch\*{0,2}\s*-+\s*\n\s*(\S+)", response_text
+    )
+    if not file_match:
+        return None
+    file_path = file_match.group(1).strip()
+
+    search_match = re.search(
+        r"SEARCH:\s*\n(?:(?:```(?:[^\n]*)\n)?(.*?)(?:```)?)(?:\nREPLACE:|\Z)",
+        response_text,
+        re.DOTALL,
+    )
+    replace_match = re.search(
+        r"REPLACE:\s*\n(?:(?:```(?:[^\n]*)\n)?(.*?)(?:```)?)(?:\n[A-Z]+:|\Z)",
+        response_text,
+        re.DOTALL,
+    )
+    if not (search_match and replace_match):
+        return None
+
+    search_block = search_match.group(1).strip()
+    replace_block = replace_match.group(1).strip()
+
+    search_lines = search_block.splitlines()
+    replace_lines = replace_block.splitlines()
+
+    if file_path not in file_path_to_content_hash:
+        return None
+
+    original_lines = hash_to_content[file_path_to_content_hash[file_path]].splitlines(
+        keepends=True
+    )
+
+    # Locate the block to replace
+    match_index = None
+    for i in range(len(original_lines) - len(search_lines) + 1):
+        original_block = [
+            line.strip() for line in original_lines[i : i + len(search_lines)]
+        ]
+        if original_block == [line.strip() for line in search_lines]:
+            match_index = i
+            break
+    if match_index is None:
+        return None
+
+    new_lines = (
+        original_lines[:match_index]
+        + [line + "\n" for line in replace_lines]
+        + original_lines[match_index + len(search_lines) :]
+    )
+
+    diff = list(
+        difflib.unified_diff(
+            original_lines,
+            new_lines,
+            fromfile=f"a/{file_path}",
+            tofile=f"b/{file_path}",
+            lineterm="",
+        )
+    )
+
+    full_diff = [f"diff --git a/{file_path} b/{file_path}"] + diff
+    return "\n".join(full_diff)
+
+
+def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
     print(f"Running agent for problem {problem['instance_id']}")
     problem_files["files"] = [
         file
@@ -81,8 +178,21 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=60000):
     response = call_gpt(system_prompt, user_prompt)
     num_repair_output_tokens = count_tokens(response)
 
-    print(response)
-    # TODO: get patch in correct format and return it
+    chain_of_thoughts = extract_cot_sections(response)
+
+    # convert response to patch
+    patch = extract_final_patch_as_diff(
+        response, problem_files["files"], hash_to_content
+    )
+    prediction = (
+        {
+            "instance_id": problem["instance_id"],
+            "model": "gpt-4.1",
+            "prediction": patch,
+        }
+        if patch
+        else None
+    )
 
     print(f"The ranking prompt has {num_ranking_input_tokens} input tokens")
     print(f"The ranking output has {num_ranking_output_tokens} output tokens")
@@ -91,13 +201,15 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=60000):
     print(f"{len(problem_files['files'])} files were selected")
     print(f"Recall: {recall:.3f}")
 
-    return {
+    metrics = {
         "num_ranking_input_tokens": num_ranking_input_tokens,
         "num_ranking_output_tokens": num_ranking_output_tokens,
         "num_repair_input_tokens": num_repair_input_tokens,
         "num_repair_output_tokens": num_repair_output_tokens,
-        "num_selected_files": len(problem_files['files']),
+        "num_selected_files": len(problem_files["files"]),
         "num_target_files": len(target_files),
         "num_selected_target_files": num_found_target_files,
         "recall": recall,
     }
+
+    return prediction, chain_of_thoughts, metrics

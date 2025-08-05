@@ -70,6 +70,7 @@ ANALYSIS INSTRUCTIONS:
 Your task is to perform the following steps in order:
 
 1. **Chain‑of‑Thought for Localization**
+- Prefix this with "Chain-of-Thought for Localization\n---------------------------------".
 - Analyze the provided repository structure and issue description to identify the relevant code sections.
 - Explain your reasoning and process for localizing the relevant code.
 
@@ -89,14 +90,16 @@ The format should be as follows:
 ‘‘‘
 
 3. **Chain‑of‑Thought for Repairing the Code**
+- Prefix this with "Chain-of-Thought for Repairing the Code\n---------------------------------------".
 - Explain your reasoning and analysis for repairing the identified issue.
 - Describe the necessary modifications, why they are needed, and include any edge‑case considerations.
 
 4. **Final Patch**
 - Provide the final patch using the following exact *SEARCH/REPLACE* format:
+  0. Start with "Final Patch\n-----------" ONCE.
   1. The file path.
-  2. The exact lines to search for (i.e. the buggy region).
-  3. The replacement lines (i.e. the fixed code).
+  2. The exact lines to search for (i.e. the buggy region). Prefix this with "SEARCH:".
+  3. The replacement lines (i.e. the fixed code). Prefix this with "REPLACE:".
 
 Ensure that your chain‑of‑thought reasoning is clearly separated from the final patch. Do not include any evaluation or commentary beyond the four requested steps.
 """

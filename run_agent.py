@@ -69,7 +69,9 @@ def load_data(args):
     # select relevant instance_ids from problems and ensure it is ordered correctly
     instance_ids = list(problem_files["instance_id"])
     id_to_row_index = {p["instance_id"]: i for i, p in enumerate(problems)}
-    sorted_indices = [id_to_row_index[iid] for iid in instance_ids if iid in id_to_row_index]
+    sorted_indices = [
+        id_to_row_index[iid] for iid in instance_ids if iid in id_to_row_index
+    ]
     problems = problems.select(sorted_indices)
 
     return hash_to_content, problem_files, problems
@@ -82,17 +84,33 @@ def main():
     output_dir = args.output_directory
     output_dir.mkdir(exist_ok=True, parents=True)
 
+    predictions = []
+    cots = []
     metrics = []
 
     for problem, files in zip(problems, problem_files):
-        instance_metrics = run_agent(problem, files, hash_to_content)
-        # TODO: store patch in csv
+        prediction, instance_cots, instance_metrics = run_agent(
+            problem, files, hash_to_content
+        )
+
+        predictions.append(prediction)
+        cots.append(instance_cots)
         metrics.append(instance_metrics)
         break
 
+    predictions_df = pd.DataFrame(predictions)
+    predictions_output_file = (
+        output_dir / f"predictions_{args.swe_bench_split}_{args.split}.csv"
+    )
+    predictions_df.to_csv(predictions_output_file, index=False)
+
+    cots_df = pd.DataFrame(cots)
+    cots_output_file = output_dir / f"cots_{args.swe_bench_split}_{args.split}.csv"
+    cots_df.to_csv(cots_output_file, index=False)
+
     metrics_df = pd.DataFrame(metrics)
     metrics_output_file = (
-            output_dir / f"metrics_{args.swe_bench_split}_{args.split}.csv"
+        output_dir / f"metrics_{args.swe_bench_split}_{args.split}.csv"
     )
     metrics_df.to_csv(metrics_output_file, index=False)
 
