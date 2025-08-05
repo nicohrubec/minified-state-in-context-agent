@@ -96,7 +96,6 @@ def main():
         predictions.append(prediction)
         cots.append(instance_cots)
         metrics.append(instance_metrics)
-        break
 
     predictions_df = pd.DataFrame(predictions)
     predictions_output_file = (

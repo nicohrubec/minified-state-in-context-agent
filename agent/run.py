@@ -191,7 +191,11 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
             "prediction": patch,
         }
         if patch
-        else None
+        else {
+            "instance:id": problem["instance_id"],
+            "model": "gpt-4.1",
+            "prediction": "",
+        }
     )
 
     print(f"The ranking prompt has {num_ranking_input_tokens} input tokens")
