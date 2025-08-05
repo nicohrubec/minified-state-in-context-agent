@@ -32,7 +32,17 @@ def filter_problem_files_with_ranking(
         file for file in problem_files["files"] if file["file_path"] in selected_paths
     ]
 
-    return problem_files
+    return problem_files, selected_paths
+
+
+def extract_target_files_from_patch(patch_text):
+    target_files = set()
+    for line in patch_text.splitlines():
+        if line.startswith('+++ b/'):
+            path = line[len('+++ b/'):].strip()
+            if path:
+                target_files.add(path)
+    return target_files
 
 
 def run_agent(problem, problem_files, hash_to_content, token_limit=60000):
@@ -54,10 +64,21 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=60000):
 
     # 2. filter based on ranking
     ranked_paths = [line.strip() for line in response.splitlines() if line.strip()]
-    problem_files = filter_problem_files_with_ranking(
+    problem_files, selected_paths = filter_problem_files_with_ranking(
         problem_files, hash_to_content, ranked_paths, token_limit
     )
     print(f"{len(problem_files['files'])} files were selected")
+
+    # get recall of preprocessing
+    patch_text = problem["patch"]
+    target_files = extract_target_files_from_patch(patch_text)
+
+    num_found_target_files = len(set(selected_paths).intersection(target_files))
+    print(ranked_paths)
+    print(num_found_target_files)
+    print(target_files)
+    recall = num_found_target_files / len(target_files)
+    print(f"Recall: {recall:.3f}")
 
     # problem solving
     system_prompt, user_prompt, _ = build_repair_prompt(
