@@ -70,9 +70,11 @@ def load_data(args):
         token=os.environ.get("HF_TOKEN"),
     )
 
-    # select relevant instance_ids from problems
-    instance_ids = set(problem_files["instance_id"])
-    problems = problems.filter(lambda x: x["instance_id"] in instance_ids)
+    # select relevant instance_ids from problems and ensure it is ordered correctly
+    instance_ids = list(problem_files["instance_id"])
+    id_to_row_index = {p["instance_id"]: i for i, p in enumerate(problems)}
+    sorted_indices = [id_to_row_index[iid] for iid in instance_ids if iid in id_to_row_index]
+    problems = problems.select(sorted_indices)
 
     return hash_to_content, problem_files, problems
 

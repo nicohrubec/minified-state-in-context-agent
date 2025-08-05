@@ -60,9 +60,11 @@ def load_data(args):
         token=os.environ.get("HF_TOKEN"),
     )
 
-    # select relevant instance_ids from problems
-    instance_ids = set(problem_files["instance_id"])
-    problems = problems.filter(lambda x: x["instance_id"] in instance_ids)
+    # select relevant instance_ids from problems and ensure it is ordered correctly
+    instance_ids = list(problem_files["instance_id"])
+    id_to_row_index = {p["instance_id"]: i for i, p in enumerate(problems)}
+    sorted_indices = [id_to_row_index[iid] for iid in instance_ids if iid in id_to_row_index]
+    problems = problems.select(sorted_indices)
 
     return hash_to_content, problem_files, problems
 
@@ -72,8 +74,9 @@ def main():
     hash_to_content, problem_files, problems = load_data(args)
 
     for problem, files in zip(problems, problem_files):
-        files["files"] = [file for file in files["files"] if file["file_type"] in ["core", "config"]]
         run_agent(problem, files, hash_to_content)
+        # TODO: store prediction in csv
+        break
 
 
 if __name__ == "__main__":
