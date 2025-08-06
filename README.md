@@ -59,3 +59,16 @@ python run_agent.py
 The agent uses a two-stage approach:
 1. **File ranking**: Ranks relevant files for the given problem
 2. **Code repair**: Generates patches to fix the identified issues
+
+### Evaluate results
+After running the agent, evaluate the predictions using SWE-Bench, e.g.:
+
+```bash
+python3 -m swebench.harness.run_evaluation \
+    --dataset_name princeton-nlp/SWE-bench_Verified \
+    --predictions_path data/agent_results/predictions_SWE-bench_Verified_test.csv \
+    --max_workers 8 \
+    --run_id my_evaluation_run
+```
+
+The predictions are stored in the `data/agent_results/` directory. The evaluation will test the generated patches against the actual repositories to verify if the issues are resolved.
