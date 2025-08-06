@@ -3,6 +3,7 @@ from datasets import load_dataset, load_from_disk
 import os
 from pathlib import Path
 import pandas as pd
+import json
 
 from agent.run import run_agent
 
@@ -77,6 +78,13 @@ def load_data(args):
     return hash_to_content, problem_files, problems
 
 
+def write_jsonl(data, output_path):
+    with open(output_path, "w", encoding="utf-8") as f:
+        for entry in data:
+            json.dump(entry, f)
+            f.write("\n")
+
+
 def main():
     args = parse_arguments()
     hash_to_content, problem_files, problems = load_data(args)
@@ -97,15 +105,13 @@ def main():
         cots.append(instance_cots)
         metrics.append(instance_metrics)
 
-    predictions_df = pd.DataFrame(predictions)
     predictions_output_file = (
-        output_dir / f"predictions_{args.swe_bench_split}_{args.split}.csv"
+        output_dir / f"predictions_{args.swe_bench_split}_{args.split}.jsonl"
     )
-    predictions_df.to_csv(predictions_output_file, index=False)
+    write_jsonl(predictions, predictions_output_file)
 
-    cots_df = pd.DataFrame(cots)
-    cots_output_file = output_dir / f"cots_{args.swe_bench_split}_{args.split}.csv"
-    cots_df.to_csv(cots_output_file, index=False)
+    cots_output_file = output_dir / f"cots_{args.swe_bench_split}_{args.split}.jsonl"
+    write_jsonl(cots, cots_output_file)
 
     metrics_df = pd.DataFrame(metrics)
     metrics_output_file = (

@@ -192,7 +192,7 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
         }
         if patch
         else {
-            "instance:id": problem["instance_id"],
+            "instance_id": problem["instance_id"],
             "model": "gpt-4.1",
             "prediction": "",
         }
