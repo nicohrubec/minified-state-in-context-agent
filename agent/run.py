@@ -187,13 +187,13 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
     prediction = (
         {
             "instance_id": problem["instance_id"],
-            "model": "gpt-4.1",
+            "model_name_or_path": "gpt-4.1",
             "model_patch": patch,
         }
         if patch
         else {
             "instance_id": problem["instance_id"],
-            "model": "gpt-4.1",
+            "model_name_or_path": "gpt-4.1",
             "model_patch": "",
         }
     )
