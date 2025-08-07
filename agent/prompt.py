@@ -96,10 +96,17 @@ The format should be as follows:
 
 4. **Final Patch**
 - Provide the final patch using the following exact *SEARCH/REPLACE* format:
-  0. Start with "Final Patch\n-----------" ONCE.
-  1. The file path.
-  2. The exact lines to search for (i.e. the buggy region). Prefix this with "SEARCH:".
-  3. The replacement lines (i.e. the fixed code). Prefix this with "REPLACE:".
+  1. Start with "Final Patch\n-----------" ONCE.
+  2. The file path.
+  3. Provide patches for the file in the SEARCH/REPLACE edit format. For each edit provide ONLY the following:
+    - Start with "<<<<<<< SEARCH"
+    - Then provide the exact lines to search for (i.e. the buggy region). 
+      It is important that this must match the original source EXACTLY, if even a single letter deviates, everything breaks.
+      Keep search regions minimal. Only search for lines that need replacement. For instance, prefer multiple smaller edits over one large edit that regenerates a full function.
+    - End the search region with a new line "=======".
+    - Then provide the replacement lines (i.e. the fixed code).
+    - End the replacement region (and with this also the patch) with ">>>>>>> REPLACE".
+    - Do not add the file path for each SEARCH/REPLACE edit.
 
 Ensure that your chain‑of‑thought reasoning is clearly separated from the final patch. Do not include any evaluation or commentary beyond the four requested steps.
 """

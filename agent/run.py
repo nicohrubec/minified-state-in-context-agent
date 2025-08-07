@@ -1,6 +1,10 @@
 import re
 from pathlib import Path
 import subprocess
+import copy
+import io
+import token
+import tokenize
 
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
@@ -73,6 +77,50 @@ def extract_cot_sections(response):
     }
 
 
+# Copied from: https://gist.github.com/BroHui/aca2b8e6e6bdf3cb4af4b246c9837fa3
+def remove_comments(input_source: str) -> str:
+    source_flag = copy.copy(input_source)
+    source = io.StringIO(input_source)
+    ls = input_source.split("\n")
+    prev_toktype = token.INDENT
+    readline = source.readline
+
+    def get_char_index(lineno, col):
+        # find the index of the char in the source code
+        if lineno == 1:
+            return len("\n".join(ls[: (lineno - 1)])) + col
+        else:
+            return len("\n".join(ls[: (lineno - 1)])) + col + 1
+
+    def replace_char_between(
+        start_lineno, start_col, end_lineno, end_col, source, replace_char, ls
+    ):
+        # replace char between start_lineno, start_col and end_lineno, end_col with replace_char, but keep '\n' and ' '
+        b = get_char_index(start_lineno, start_col)
+        e = get_char_index(end_lineno, end_col)
+        for i in range(b, e):
+            if source[i] == "\n":
+                source = source[:i] + "\n" + source[i + 1 :]
+            elif source[i] == " ":
+                source = source[:i] + " " + source[i + 1 :]
+            else:
+                source = source[:i] + replace_char + source[i + 1 :]
+        return source
+
+    tokgen = tokenize.generate_tokens(readline)
+    for toktype, ttext, (slineno, scol), (elineno, ecol), ltext in tokgen:
+        if toktype == token.STRING and prev_toktype == token.INDENT:
+            source_flag = replace_char_between(
+                slineno, scol, elineno, ecol, source_flag, " ", ls
+            )
+        elif toktype == tokenize.COMMENT:
+            source_flag = replace_char_between(
+                slineno, scol, elineno, ecol, source_flag, " ", ls
+            )
+        prev_toktype = toktype
+    return source_flag
+
+
 def extract_final_patch_as_diff(response_text, repo_dir):
     file_match = re.search(
         r"\*{0,2}Final Patch\*{0,2}\s*-+\s*\n\s*(\S+)", response_text
@@ -81,24 +129,6 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         print("File path could not be matched!")
         return None
     file_path = file_match.group(1).strip()
-
-    search_match = re.search(
-        r"SEARCH:\s*\n(?:(?:```(?:[^\n]*)\n)?(.*?)(?:```)?)(?:\nREPLACE:|\Z)",
-        response_text,
-        re.DOTALL,
-    )
-    replace_match = re.search(
-        r"REPLACE:\s*\n(?:(?:```(?:[^\n]*)\n)?(.*?)(?:```)?)(?:\n[A-Z]+:|\Z)",
-        response_text,
-        re.DOTALL,
-    )
-    if not (search_match and replace_match):
-        print("No search or replace block could be matched!")
-        return None
-
-    search_block = search_match.group(1).strip()
-    replace_block = replace_match.group(1).strip()
-
     repo_path = Path(repo_dir)
     target_file = repo_path / file_path
 
@@ -107,12 +137,37 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         return None
 
     original_content = target_file.read_text()
+    modified_content = remove_comments(original_content)
 
-    if search_block not in original_content:
-        print("Search block could not be found!")
+    patch_block_match = re.search(
+        r"Final Patch\s*-+\s*" + re.escape(file_path) + r"\s*\n(.*)",
+        response_text,
+        re.DOTALL,
+    )
+    if not patch_block_match:
+        print("Final patch block not found!")
         return None
 
-    modified_content = original_content.replace(search_block, replace_block)
+    patch_block = patch_block_match.group(1)
+
+    edit_pattern = re.compile(
+        r"<{2,}\s*SEARCH\s*\n(.*?)\n=+\n(.*?)\n>+.*REPLACE",
+        re.DOTALL,
+    )
+    edits = edit_pattern.findall(patch_block)
+
+    if not edits:
+        print("No edits found in final patch.")
+        return None
+
+    for search_block, replace_block in edits:
+        search_block = search_block.strip()
+        replace_block = replace_block.strip()
+        if search_block not in modified_content:
+            print("Search block could not be found in file content.")
+            return None
+        modified_content = modified_content.replace(search_block, replace_block)
+
     target_file.write_text(modified_content)
 
     try:
@@ -125,7 +180,6 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         )
         diff_output = result.stdout
     finally:
-        # revert changes
         target_file.write_text(original_content)
 
     return diff_output
