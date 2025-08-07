@@ -1,5 +1,6 @@
 import re
-import difflib
+from pathlib import Path
+import subprocess
 
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
@@ -72,15 +73,12 @@ def extract_cot_sections(response):
     }
 
 
-def extract_final_patch_as_diff(response_text, files, hash_to_content):
-    file_path_to_content_hash = {
-        file["file_path"]: file["content_hash"] for file in files
-    }
-
+def extract_final_patch_as_diff(response_text, repo_dir):
     file_match = re.search(
         r"\*{0,2}Final Patch\*{0,2}\s*-+\s*\n\s*(\S+)", response_text
     )
     if not file_match:
+        print("File path could not be matched!")
         return None
     file_path = file_match.group(1).strip()
 
@@ -95,60 +93,55 @@ def extract_final_patch_as_diff(response_text, files, hash_to_content):
         re.DOTALL,
     )
     if not (search_match and replace_match):
+        print("No search or replace block could be matched!")
         return None
 
     search_block = search_match.group(1).strip()
     replace_block = replace_match.group(1).strip()
 
-    search_lines = search_block.splitlines()
-    replace_lines = replace_block.splitlines()
+    repo_path = Path(repo_dir)
+    target_file = repo_path / file_path
 
-    if file_path not in file_path_to_content_hash:
+    if not target_file.exists():
+        print("Target file does not exist!")
         return None
 
-    original_lines = hash_to_content[file_path_to_content_hash[file_path]].splitlines(
-        keepends=True
-    )
+    original_content = target_file.read_text()
 
-    # Locate the block to replace
-    match_index = None
-    for i in range(len(original_lines) - len(search_lines) + 1):
-        original_block = [
-            line.strip() for line in original_lines[i : i + len(search_lines)]
-        ]
-        if original_block == [line.strip() for line in search_lines]:
-            match_index = i
-            break
-    if match_index is None:
+    if search_block not in original_content:
+        print("Search block could not be found!")
         return None
 
-    new_lines = (
-        original_lines[:match_index]
-        + [line + "\n" for line in replace_lines]
-        + original_lines[match_index + len(search_lines) :]
-    )
+    modified_content = original_content.replace(search_block, replace_block)
+    target_file.write_text(modified_content)
 
-    diff = list(
-        difflib.unified_diff(
-            original_lines,
-            new_lines,
-            fromfile=f"a/{file_path}",
-            tofile=f"b/{file_path}",
-            lineterm="",
+    try:
+        result = subprocess.run(
+            ["git", "diff", "--", str(target_file)],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+            check=True,
         )
-    )
+        diff_output = result.stdout
+    finally:
+        # revert changes
+        target_file.write_text(original_content)
 
-    full_diff = [f"diff --git a/{file_path} b/{file_path}"] + diff
-    return "\n".join(full_diff)
+    return diff_output
 
 
-def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
+def run_agent(
+    problem, problem_files, hash_to_content, repo_base_dir, token_limit=10000
+):
     print(f"Running agent for problem {problem['instance_id']}")
     problem_files["files"] = [
         file
         for file in problem_files["files"]
         if file["file_type"] in ["core", "config"]
     ]
+
+    repo_dir = Path(repo_base_dir) / problem["repo"].split("/")[-1]
 
     # preprocessing step
     # 1. file ranking
@@ -179,11 +172,8 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
     num_repair_output_tokens = count_tokens(response)
 
     chain_of_thoughts = extract_cot_sections(response)
+    patch = extract_final_patch_as_diff(response, repo_dir)
 
-    # convert response to patch
-    patch = extract_final_patch_as_diff(
-        response, problem_files["files"], hash_to_content
-    )
     prediction = (
         {
             "instance_id": problem["instance_id"],
@@ -216,4 +206,4 @@ def run_agent(problem, problem_files, hash_to_content, token_limit=10000):
         "recall": recall,
     }
 
-    return prediction, chain_of_thoughts, metrics
+    return prediction, chain_of_thoughts, metrics, response

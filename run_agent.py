@@ -27,6 +27,10 @@ def parse_arguments():
         type=Path,
         default="/Users/nicolashrubec/dev/agent-state-management/data/agent_results",
     )
+    parser.add_argument(
+        "--repository_directory",
+        default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
+    )
     return parser.parse_args()
 
 
@@ -95,15 +99,17 @@ def main():
     predictions = []
     cots = []
     metrics = []
+    raw_responses = []
 
     for problem, files in zip(problems, problem_files):
-        prediction, instance_cots, instance_metrics = run_agent(
-            problem, files, hash_to_content
+        prediction, instance_cots, instance_metrics, raw_response = run_agent(
+            problem, files, hash_to_content, args.repository_directory
         )
 
         predictions.append(prediction)
         cots.append(instance_cots)
         metrics.append(instance_metrics)
+        raw_responses.append(raw_response)
 
     predictions_output_file = (
         output_dir / f"predictions_{args.swe_bench_split}_{args.split}.jsonl"
@@ -118,6 +124,12 @@ def main():
         output_dir / f"metrics_{args.swe_bench_split}_{args.split}.csv"
     )
     metrics_df.to_csv(metrics_output_file, index=False)
+
+    raw_responses_output_file = (
+        output_dir / f"responses_{args.swe_bench_split}_{args.split}.json"
+    )
+    with open(raw_responses_output_file, "w") as f:
+        json.dump(raw_responses, f, indent=2)
 
 
 if __name__ == "__main__":
