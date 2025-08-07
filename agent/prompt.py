@@ -107,6 +107,7 @@ The format should be as follows:
     - Then provide the replacement lines (i.e. the fixed code).
     - End the replacement region (and with this also the patch) with ">>>>>>> REPLACE".
     - Do not add the file path for each SEARCH/REPLACE edit.
+    - Focus patches on code changes, i.e. a patch should never only consist of a comment edit.
 
 Ensure that your chain‑of‑thought reasoning is clearly separated from the final patch. Do not include any evaluation or commentary beyond the four requested steps.
 """
