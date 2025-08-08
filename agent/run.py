@@ -137,6 +137,18 @@ def extract_final_patch_as_diff(response_text, repo_dir):
     return diff_output
 
 
+def get_target_file_positions_in_ranking(ranked_paths, target_files):
+    target_file_positions = []
+    num_target_files_in_ranking = 0
+
+    for idx, path in enumerate(ranked_paths):
+        if path in target_files:
+            target_file_positions.append(idx + 1)
+            num_target_files_in_ranking += 1
+
+    return target_file_positions, num_target_files_in_ranking
+
+
 def run_agent(
     problem, problem_files, hash_to_content, repo_base_dir, token_limit=10000
 ):
@@ -162,10 +174,13 @@ def run_agent(
         problem_files, hash_to_content, ranked_paths, token_limit
     )
 
-    # get recall of preprocessing
     patch_text = problem["patch"]
     target_files = extract_target_files_from_patch(patch_text)
+    target_file_positions, num_target_files_in_ranking = (
+        get_target_file_positions_in_ranking(ranked_paths, target_files)
+    )
 
+    # get recall of preprocessing
     num_found_target_files = len(set(selected_paths).intersection(target_files))
     recall = num_found_target_files / len(target_files)
 
@@ -209,6 +224,8 @@ def run_agent(
         "num_selected_files": len(problem_files["files"]),
         "num_target_files": len(target_files),
         "num_selected_target_files": num_found_target_files,
+        "target_file_positions": target_file_positions,
+        "num_target_files_in_ranking": num_target_files_in_ranking,
         "recall": recall,
     }
 
