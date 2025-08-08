@@ -158,6 +158,8 @@ def run_agent(
         for file in problem_files["files"]
         if file["file_type"] in ["core", "config"]
     ]
+    patch_text = problem["patch"]
+    instance_id = problem["instance_id"]
 
     repo_dir = Path(repo_base_dir) / problem["repo"].split("/")[-1]
 
@@ -174,7 +176,6 @@ def run_agent(
         problem_files, hash_to_content, ranked_paths, token_limit
     )
 
-    patch_text = problem["patch"]
     target_files = extract_target_files_from_patch(patch_text)
     target_file_positions, num_target_files_in_ranking = (
         get_target_file_positions_in_ranking(ranked_paths, target_files)
@@ -193,6 +194,8 @@ def run_agent(
     num_repair_output_tokens = count_tokens(response)
 
     chain_of_thoughts = extract_cot_sections(response)
+    chain_of_thoughts["instance_id"] = instance_id
+
     patch = extract_final_patch_as_diff(response, repo_dir)
 
     prediction = (
@@ -217,6 +220,7 @@ def run_agent(
     print(f"Recall: {recall:.3f}")
 
     metrics = {
+        "instance_id": instance_id,
         "num_ranking_input_tokens": num_ranking_input_tokens,
         "num_ranking_output_tokens": num_ranking_output_tokens,
         "num_repair_input_tokens": num_repair_input_tokens,
@@ -229,4 +233,9 @@ def run_agent(
         "recall": recall,
     }
 
-    return prediction, chain_of_thoughts, metrics, response
+    response_json = {
+        "instance_id": instance_id,
+        "response": response,
+    }
+
+    return prediction, chain_of_thoughts, metrics, response_json
