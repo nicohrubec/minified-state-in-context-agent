@@ -150,7 +150,12 @@ def get_target_file_positions_in_ranking(ranked_paths, target_files):
 
 
 def run_agent(
-    problem, problem_files, hash_to_content, repo_base_dir, token_limit=10000
+    problem,
+    problem_files,
+    hash_to_content,
+    repo_base_dir,
+    skip_repair,
+    token_limit=10000,
 ):
     print(f"Running agent for problem {problem['instance_id']}")
     problem_files["files"] = [
@@ -185,7 +190,25 @@ def run_agent(
     num_found_target_files = len(set(selected_paths).intersection(target_files))
     recall = num_found_target_files / len(target_files)
 
-    # problem solving
+    print(f"The ranking prompt has {num_ranking_input_tokens} input tokens")
+    print(f"The ranking output has {num_ranking_output_tokens} output tokens")
+    print(f"{len(problem_files['files'])} files were selected")
+    print(f"Recall: {recall:.3f}")
+
+    if skip_repair:
+        return {
+            "instance_id": instance_id,
+            "num_ranking_input_tokens": num_ranking_input_tokens,
+            "num_ranking_output_tokens": num_ranking_output_tokens,
+            "num_selected_files": len(problem_files["files"]),
+            "num_target_files": len(target_files),
+            "num_selected_target_files": num_found_target_files,
+            "target_file_positions": target_file_positions,
+            "num_target_files_in_ranking": num_target_files_in_ranking,
+            "recall": recall,
+        }
+
+    # repair
     system_prompt, user_prompt, _ = build_repair_prompt(
         problem, problem_files, hash_to_content
     )
@@ -212,12 +235,8 @@ def run_agent(
         }
     )
 
-    print(f"The ranking prompt has {num_ranking_input_tokens} input tokens")
-    print(f"The ranking output has {num_ranking_output_tokens} output tokens")
     print(f"The repair prompt has {num_repair_input_tokens} tokens")
     print(f"The repair output has {num_repair_output_tokens} output tokens")
-    print(f"{len(problem_files['files'])} files were selected")
-    print(f"Recall: {recall:.3f}")
 
     metrics = {
         "instance_id": instance_id,

@@ -31,6 +31,7 @@ def parse_arguments():
         "--repository_directory",
         default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
     )
+    parser.add_argument("--skip_repair", action="store_true")
     return parser.parse_args()
 
 
@@ -102,14 +103,42 @@ def main():
     raw_responses = []
 
     for problem, files in zip(problems, problem_files):
-        prediction, instance_cots, instance_metrics, raw_response = run_agent(
-            problem, files, hash_to_content, args.repository_directory
-        )
+        if args.skip_repair:
+            instance_metrics = run_agent(
+                problem,
+                files,
+                hash_to_content,
+                args.repository_directory,
+                args.skip_repair,
+            )
+            metrics.append(instance_metrics)
+        else:
+            prediction, instance_cots, instance_metrics, raw_response = run_agent(
+                problem,
+                files,
+                hash_to_content,
+                args.repository_directory,
+                args.skip_repair,
+            )
 
-        predictions.append(prediction)
-        cots.append(instance_cots)
-        metrics.append(instance_metrics)
-        raw_responses.append(raw_response)
+            predictions.append(prediction)
+            cots.append(instance_cots)
+            metrics.append(instance_metrics)
+            raw_responses.append(raw_response)
+
+        break
+
+    if args.skip_repair:
+        metrics_file_name = f"repair_metrics_{args.swe_bench_split}_{args.split}.csv"
+    else:
+        metrics_file_name = f"metrics_{args.swe_bench_split}_{args.split}.csv"
+
+    metrics_df = pd.DataFrame(metrics)
+    metrics_output_file = output_dir / metrics_file_name
+    metrics_df.to_csv(metrics_output_file, index=False)
+
+    if args.skip_repair:
+        return
 
     predictions_output_file = (
         output_dir / f"predictions_{args.swe_bench_split}_{args.split}.jsonl"
@@ -118,12 +147,6 @@ def main():
 
     cots_output_file = output_dir / f"cots_{args.swe_bench_split}_{args.split}.jsonl"
     write_jsonl(cots, cots_output_file)
-
-    metrics_df = pd.DataFrame(metrics)
-    metrics_output_file = (
-        output_dir / f"metrics_{args.swe_bench_split}_{args.split}.csv"
-    )
-    metrics_df.to_csv(metrics_output_file, index=False)
 
     raw_responses_output_file = (
         output_dir / f"responses_{args.swe_bench_split}_{args.split}.json"
