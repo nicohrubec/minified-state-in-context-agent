@@ -32,7 +32,11 @@ def parse_arguments():
         default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
     )
     parser.add_argument("--skip_repair", action="store_true")
-    parser.add_argument("--rank_encoding", default="list", choices=["list", "trie"])
+    parser.add_argument(
+        "--rank_encoding",
+        default="list",
+        choices=["list", "trie", "int_folder", "int_path"],
+    )
     return parser.parse_args()
 
 

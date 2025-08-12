@@ -1,3 +1,6 @@
+from shared.tokens import count_tokens
+
+
 def build_list_repo_structure(problem_files):
     structure_lines = []
     for file in problem_files["files"]:
@@ -34,14 +37,74 @@ def build_trie_repo_structure(problem_files):
     return structure
 
 
+def build_int_folder_repo_structure(problem_files):
+    structure_lines = []
+    folder_counts_and_tokens_used = {}
+
+    for file in problem_files["files"]:
+        parts = file["file_path"].split("/")
+        for part in parts:
+            if part in folder_counts_and_tokens_used:
+                folder_counts_and_tokens_used[part]["count"] += 1
+            else:
+                folder_counts_and_tokens_used[part] = {
+                    "count": 1,
+                    "tokens": count_tokens(part),
+                }
+
+    # check if it is worth it to do a replacement for the folder name
+    replacement_int = 0
+    replacements = {}
+    for folder in folder_counts_and_tokens_used:
+        folder_count = folder_counts_and_tokens_used[folder]["count"]
+        folder_tokens_used = folder_counts_and_tokens_used[folder]["tokens"]
+        total_tokens_used = folder_count * folder_tokens_used
+        replacement_str = f"{replacement_int}:{folder}"
+
+        # int encode
+        if total_tokens_used > count_tokens(replacement_str):
+            structure_lines.append(replacement_str)
+            replacements[folder] = replacement_int
+            replacement_int += 1
+
+    # add instructions for how to use the mapping
+    structure_lines.append(
+        "Below you can find the full list of file paths for the repository. If a folder name is an int, you can look up the actual name in the folder mapping above."
+    )
+    structure_lines.append(
+        "For instance, if the listed name is 1/2 and there are entries 1:abc 2:def.py, then the actual full path would be abc/def.py."
+    )
+
+    # build structure
+    for file in problem_files["files"]:
+        parts = file["file_path"].split("/")
+        for idx, part in enumerate(parts):
+            if part in replacements:
+                parts[idx] = str(replacements[part])
+        structure_lines.append("/".join(parts))
+    structure = "\n".join(structure_lines)
+
+    return structure, replacements
+
+
+def build_int_path_repo_structure(problem_files):
+    # TODO: implement
+    return "", {}
+
+
 def build_file_ranking_prompt(problem, problem_files, rank_encoding="list"):
     problem_statement = problem["problem_statement"]
+    replacements = {}
 
     match rank_encoding:
         case "list":
             structure = build_list_repo_structure(problem_files)
         case "trie":
             structure = build_trie_repo_structure(problem_files)
+        case "int_folder":
+            structure, replacements = build_int_folder_repo_structure(problem_files)
+        case "int_path":
+            structure, replacements = build_int_path_repo_structure(problem_files)
         case _:
             raise NotImplementedError
 
@@ -78,7 +141,7 @@ The returned list should be separated by new lines and wrapped
     ```
     """
 
-    return prompt
+    return prompt, replacements
 
 
 def build_repair_prompt(problem, problem_files, hash_to_content):

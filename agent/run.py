@@ -149,6 +149,25 @@ def get_target_file_positions_in_ranking(ranked_paths, target_files):
     return target_file_positions, num_target_files_in_ranking
 
 
+def decode_paths(paths, replacements):
+    if len(replacements) <= 0:
+        return paths
+
+    inv_replacements = {
+        str(replacement_int): folder for folder, replacement_int in replacements.items()
+    }
+
+    for path_idx, path in enumerate(paths):
+        parts = path.split("/")
+        for part_idx, part in enumerate(parts):
+            if part in inv_replacements:
+                parts[part_idx] = inv_replacements[part]
+
+        paths[path_idx] = "/".join(parts)
+
+    return paths
+
+
 def run_agent(
     problem,
     problem_files,
@@ -171,15 +190,18 @@ def run_agent(
 
     # preprocessing step
     # 1. file ranking
-    prompt = build_file_ranking_prompt(problem, problem_files, rank_encoding)
+    prompt, replacements = build_file_ranking_prompt(
+        problem, problem_files, rank_encoding
+    )
     num_ranking_input_tokens = count_tokens(prompt)
     response = call_gpt("", prompt)
     num_ranking_output_tokens = count_tokens(response)
 
     # 2. filter based on ranking
     ranked_paths = [line.strip() for line in response.splitlines() if line.strip()]
+    decoded_ranked_paths = decode_paths(ranked_paths, replacements)
     problem_files, selected_paths = filter_problem_files_with_ranking(
-        problem_files, hash_to_content, ranked_paths, token_limit
+        problem_files, hash_to_content, decoded_ranked_paths, token_limit
     )
 
     target_files = extract_target_files_from_patch(patch_text)
