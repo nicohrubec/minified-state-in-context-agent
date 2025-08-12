@@ -53,29 +53,23 @@ def build_int_folder_repo_structure(problem_files):
                 }
 
     # check if it is worth it to do a replacement for the folder name
-    replacement_int = 0
-    replacements = {}
-    for folder in folder_counts_and_tokens_used:
-        folder_count = folder_counts_and_tokens_used[folder]["count"]
-        folder_tokens_used = folder_counts_and_tokens_used[folder]["tokens"]
-        total_tokens_used = folder_count * folder_tokens_used
-        replacement_str = f"{replacement_int}:{folder}"
-
-        # int encode
-        if total_tokens_used > count_tokens(replacement_str):
-            structure_lines.append(replacement_str)
-            replacements[folder] = replacement_int
-            replacement_int += 1
+    # if adding an integer mapping entry and then replacing occurrences with the int saves tokens
+    # we do that
+    structure_lines, replacements = get_replacements_saving_tokens(
+        structure_lines, folder_counts_and_tokens_used
+    )
 
     # add instructions for how to use the mapping
     structure_lines.append(
-        "Below you can find the full list of file paths for the repository. If a folder name is an int, you can look up the actual name in the folder mapping above."
+        "Below you can find the full list of file paths for the repository. "
+        "If a folder name is an int, you can look up the actual name in the folder mapping above."
     )
     structure_lines.append(
-        "For instance, if the listed name is 1/2 and there are entries 1:abc 2:def.py, then the actual full path would be abc/def.py."
+        "For instance, if the listed name is 1/2 and there are entries 1:abc 2:def.py, "
+        "then the actual full path would be abc/def.py."
     )
 
-    # build structure
+    # build file structure with folder names replaced by ints if they have an entry at the top
     for file in problem_files["files"]:
         parts = file["file_path"].split("/")
         for idx, part in enumerate(parts):
@@ -87,9 +81,81 @@ def build_int_folder_repo_structure(problem_files):
     return structure, replacements
 
 
+def get_replacements_saving_tokens(structure_lines, counts_and_tokens_used):
+    replacement_int = 0
+    replacements = {}
+    for path in counts_and_tokens_used:
+        path_count = counts_and_tokens_used[path]["count"]
+        path_tokens_used = counts_and_tokens_used[path]["tokens"]
+        total_tokens_used = path_count * path_tokens_used
+        replacement_str = f"{replacement_int}:{path}"
+
+        # int encode
+        if total_tokens_used > count_tokens(replacement_str):
+            structure_lines.append(replacement_str)
+            replacements[path] = replacement_int
+            replacement_int += 1
+
+    return structure_lines, replacements
+
+
 def build_int_path_repo_structure(problem_files):
-    # TODO: implement
-    return "", {}
+    structure_lines = []
+    path_counts_and_tokens_used = {}
+
+    for file in problem_files["files"]:
+        current_path = ""
+        parts = file["file_path"].split("/")
+        for idx, part in enumerate(parts):
+            current_path += part
+
+            if current_path in path_counts_and_tokens_used:
+                path_counts_and_tokens_used[current_path]["count"] += 1
+            else:
+                path_counts_and_tokens_used[current_path] = {
+                    "count": 1,
+                    "tokens": count_tokens(current_path),
+                }
+
+            if idx != len(parts) - 1:
+                current_path += "/"
+
+    # check if it is worth it to do a replacement for subpaths
+    # if adding an integer mapping entry and then replacing occurrences with the int saves tokens
+    # we do that
+    structure_lines, replacements = get_replacements_saving_tokens(
+        structure_lines, path_counts_and_tokens_used
+    )
+
+    # add instructions for how to use mapping
+    structure_lines.append(
+        "Below you can find the full list of file paths for the repository. "
+        "If a path name is an int, you can look up the actual path in the mapping above."
+    )
+    structure_lines.append(
+        "For instance, if the listed name is 1/def.py and is an entry 1:abc, "
+        "then the actual full path would be abc/def.py."
+    )
+
+    # build file structure with folder names replaced by ints if they have an entry at the top
+    # we first check deeper paths, because in case that multiple replacements are available for that path
+    # the deeper ones should strictly save more tokens
+    for file in problem_files["files"]:
+        parts = file["file_path"].split("/")
+        idx = len(parts) - 1
+
+        while idx > 0:
+            candidate = "/".join(parts[: idx + 1])  # join up to and including idx
+            if candidate in replacements:
+                # replace all contributing entries [0...idx] with a single entry
+                parts = [str(replacements[candidate])] + parts[idx + 1 :]
+                break
+            idx -= 1
+        structure_lines.append("/".join(parts))
+
+    structure = "\n".join(structure_lines)
+
+    return structure, replacements
 
 
 def build_file_ranking_prompt(problem, problem_files, rank_encoding="list"):
