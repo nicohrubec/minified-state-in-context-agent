@@ -1,11 +1,49 @@
-def build_file_ranking_prompt(problem, problem_files):
-    problem_statement = problem["problem_statement"]
-
-    # build repo structure
+def build_list_repo_structure(problem_files):
     structure_lines = []
     for file in problem_files["files"]:
         structure_lines.append(file["file_path"])
     structure = "\n".join(structure_lines)
+
+    return structure
+
+
+def build_trie(problem_files):
+    trie = {}
+    for file in problem_files["files"]:
+        parts = file["file_path"].split("/")
+        node = trie
+        for part in parts:
+            node = node.setdefault(part, {})
+    return trie
+
+
+def build_trie_repo_structure(problem_files):
+    trie = build_trie(problem_files)
+
+    def render(node, depth=0):
+        lines = []
+        for name in sorted(node.keys()):
+            lines.append("  " * depth + name)
+            if node[name]:  # has children
+                lines.extend(render(node[name], depth + 1))
+        return lines
+
+    structure_lines = render(trie)
+    structure = "\n".join(structure_lines)
+
+    return structure
+
+
+def build_file_ranking_prompt(problem, problem_files, rank_encoding="list"):
+    problem_statement = problem["problem_statement"]
+
+    match rank_encoding:
+        case "list":
+            structure = build_list_repo_structure(problem_files)
+        case "trie":
+            structure = build_trie_repo_structure(problem_files)
+        case _:
+            raise NotImplementedError
 
     prompt = f"""Please look through the following GitHub problem description and 
     Repository structure and provide a ranked list of files or 
@@ -33,10 +71,10 @@ The returned list should be separated by new lines and wrapped
     with```.
     For example:
     ```
-    file1 . py
-    folder2 / file3 . py
-    folder4 / subfolder5 /
-    folder6 / file7 . py
+    file1.py
+    folder2/file3.py
+    folder4/subfolder5/
+    folder6/file7.py
     ```
     """
 

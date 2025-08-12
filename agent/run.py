@@ -155,6 +155,7 @@ def run_agent(
     hash_to_content,
     repo_base_dir,
     skip_repair,
+    rank_encoding,
     token_limit=10000,
 ):
     print(f"Running agent for problem {problem['instance_id']}")
@@ -170,7 +171,7 @@ def run_agent(
 
     # preprocessing step
     # 1. file ranking
-    prompt = build_file_ranking_prompt(problem, problem_files)
+    prompt = build_file_ranking_prompt(problem, problem_files, rank_encoding)
     num_ranking_input_tokens = count_tokens(prompt)
     response = call_gpt("", prompt)
     num_ranking_output_tokens = count_tokens(response)

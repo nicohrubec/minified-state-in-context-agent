@@ -32,6 +32,7 @@ def parse_arguments():
         default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
     )
     parser.add_argument("--skip_repair", action="store_true")
+    parser.add_argument("--rank_encoding", default="list", choices=["list", "trie"])
     return parser.parse_args()
 
 
@@ -110,6 +111,7 @@ def main():
                 hash_to_content,
                 args.repository_directory,
                 args.skip_repair,
+                args.rank_encoding,
             )
             metrics.append(instance_metrics)
         else:
@@ -119,6 +121,7 @@ def main():
                 hash_to_content,
                 args.repository_directory,
                 args.skip_repair,
+                args.rank_encoding,
             )
 
             predictions.append(prediction)
