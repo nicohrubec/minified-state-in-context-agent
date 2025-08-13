@@ -175,6 +175,7 @@ def run_agent(
     repo_base_dir,
     skip_repair,
     rank_encoding,
+    transformations,
     token_limit=10000,
 ):
     print(f"Running agent for problem {problem['instance_id']}")
@@ -233,7 +234,7 @@ def run_agent(
 
     # repair
     system_prompt, user_prompt, _ = build_repair_prompt(
-        problem, problem_files, hash_to_content
+        problem, problem_files, hash_to_content, transformations
     )
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
     response = call_gpt(system_prompt, user_prompt)

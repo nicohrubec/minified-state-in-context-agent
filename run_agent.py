@@ -37,6 +37,12 @@ def parse_arguments():
         default="list",
         choices=["list", "trie", "int_folder", "int_path"],
     )
+    parser.add_argument(
+        "--transformations",
+        nargs="*",
+        default="",
+        choices=["imports"],
+    )
     return parser.parse_args()
 
 
@@ -116,6 +122,7 @@ def main():
                 args.repository_directory,
                 args.skip_repair,
                 args.rank_encoding,
+                args.transformations,
             )
             metrics.append(instance_metrics)
         else:
@@ -126,6 +133,7 @@ def main():
                 args.repository_directory,
                 args.skip_repair,
                 args.rank_encoding,
+                args.transformations,
             )
 
             predictions.append(prediction)
@@ -135,10 +143,15 @@ def main():
 
         break
 
+    transformations = "_".join(args.transformations)
     if args.skip_repair:
-        metrics_file_name = f"repair_metrics_{args.swe_bench_split}_{args.split}.csv"
+        metrics_file_name = (
+            f"repair_metrics_{args.swe_bench_split}_{args.split}_{transformations}.csv"
+        )
     else:
-        metrics_file_name = f"metrics_{args.swe_bench_split}_{args.split}.csv"
+        metrics_file_name = (
+            f"metrics_{args.swe_bench_split}_{args.split}_{transformations}.csv"
+        )
 
     metrics_df = pd.DataFrame(metrics)
     metrics_output_file = output_dir / metrics_file_name
@@ -148,15 +161,19 @@ def main():
         return
 
     predictions_output_file = (
-        output_dir / f"predictions_{args.swe_bench_split}_{args.split}.jsonl"
+        output_dir
+        / f"predictions_{args.swe_bench_split}_{args.split}_{transformations}.jsonl"
     )
     write_jsonl(predictions, predictions_output_file)
 
-    cots_output_file = output_dir / f"cots_{args.swe_bench_split}_{args.split}.jsonl"
+    cots_output_file = (
+        output_dir / f"cots_{args.swe_bench_split}_{args.split}_{transformations}.jsonl"
+    )
     write_jsonl(cots, cots_output_file)
 
     raw_responses_output_file = (
-        output_dir / f"responses_{args.swe_bench_split}_{args.split}.json"
+        output_dir
+        / f"responses_{args.swe_bench_split}_{args.split}_{transformations}.json"
     )
     with open(raw_responses_output_file, "w") as f:
         json.dump(raw_responses, f, indent=2)

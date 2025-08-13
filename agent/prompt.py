@@ -1,3 +1,4 @@
+from agent.minify import minify
 from shared.tokens import count_tokens
 
 
@@ -210,7 +211,7 @@ The returned list should be separated by new lines and wrapped
     return prompt, replacements
 
 
-def build_repair_prompt(problem, problem_files, hash_to_content):
+def build_repair_prompt(problem, problem_files, hash_to_content, transformations):
     problem_statement = problem["problem_statement"]
 
     # collect source files
@@ -219,6 +220,8 @@ def build_repair_prompt(problem, problem_files, hash_to_content):
         path, content_hash = file["file_path"], file["content_hash"]
         content = hash_to_content[content_hash]
         all_sources.append(f"### {path}\n{content}")
+
+    all_sources, source_maps = minify(all_sources, transformations)
     all_sources_str = "\n\n".join(all_sources)
 
     system_prompt = "You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description."
