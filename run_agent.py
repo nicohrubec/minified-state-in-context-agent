@@ -6,6 +6,7 @@ import pandas as pd
 import json
 
 from agent.run import run_agent
+from agent.minify import DEFINED_TRANSFORMATIONS
 
 
 def parse_arguments():
@@ -41,7 +42,7 @@ def parse_arguments():
         "--transformations",
         nargs="*",
         default=[],
-        choices=["imports_merge", "imports_remove", "blank_lines"],
+        choices=DEFINED_TRANSFORMATIONS,
     )
     return parser.parse_args()
 
