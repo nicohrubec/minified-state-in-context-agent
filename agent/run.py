@@ -74,12 +74,15 @@ def extract_cot_sections(response):
     }
 
 
+_WS_OR_COMMENT = r"(?:\s+|[ \t]*(?:#[^\n]*)\s*)+"
+
+
 def _flex_pattern_from_literal(block: str) -> str:
     parts = re.findall(r"\S+|\s+", block)
     pat_parts = []
     for p in parts:
         if p.isspace():
-            pat_parts.append(r"\s+")
+            pat_parts.append(_WS_OR_COMMENT)
         else:
             pat_parts.append(re.escape(p))
     return "".join(pat_parts)

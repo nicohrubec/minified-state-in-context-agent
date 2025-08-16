@@ -1,4 +1,6 @@
-from typing import List, Dict
+from typing import List
+import tokenize
+import io
 
 from agent.helpers import is_import_line, is_blank_line
 
@@ -69,5 +71,28 @@ def remove_blank_lines(source_files: List[str]):
 
         kept_body: List[str] = [line for line in body if not is_blank_line(line)]
         new_sources.append("\n".join([path] + kept_body))
+
+    return new_sources
+
+
+def remove_comments(source_files: List[str]):
+    new_sources: List[str] = []
+
+    for src in source_files:
+        lines = src.splitlines()
+        if not lines:
+            continue
+
+        path = lines[0]
+        body = "\n".join(lines[1:])
+
+        try:
+            # remove comments from file
+            tokens = tokenize.generate_tokens(io.StringIO(body).readline)
+            filtered_tokens = [tok for tok in tokens if tok.type != tokenize.COMMENT]
+            uncommented_body = tokenize.untokenize(filtered_tokens)
+            new_sources.append(path + "\n" + uncommented_body)
+        except (tokenize.TokenError, IndentationError):
+            new_sources.append(path + "\n" + body)
 
     return new_sources
