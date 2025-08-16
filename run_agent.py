@@ -40,7 +40,7 @@ def parse_arguments():
     parser.add_argument(
         "--transformations",
         nargs="*",
-        default="",
+        default=[],
         choices=["imports"],
     )
     return parser.parse_args()
@@ -113,6 +113,9 @@ def main():
     metrics = []
     raw_responses = []
 
+    transformations = args.transformations
+    transformations_suffix = "_".join(transformations)
+
     for problem, files in zip(problems, problem_files):
         if args.skip_repair:
             instance_metrics = run_agent(
@@ -122,7 +125,7 @@ def main():
                 args.repository_directory,
                 args.skip_repair,
                 args.rank_encoding,
-                args.transformations,
+                transformations,
             )
             metrics.append(instance_metrics)
         else:
@@ -133,7 +136,7 @@ def main():
                 args.repository_directory,
                 args.skip_repair,
                 args.rank_encoding,
-                args.transformations,
+                transformations,
             )
 
             predictions.append(prediction)
@@ -141,16 +144,13 @@ def main():
             metrics.append(instance_metrics)
             raw_responses.append(raw_response)
 
-        break
-
-    transformations = "_".join(args.transformations)
     if args.skip_repair:
         metrics_file_name = (
-            f"repair_metrics_{args.swe_bench_split}_{args.split}_{transformations}.csv"
+            f"repair_metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
         )
     else:
         metrics_file_name = (
-            f"metrics_{args.swe_bench_split}_{args.split}_{transformations}.csv"
+            f"metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
         )
 
     metrics_df = pd.DataFrame(metrics)
@@ -162,18 +162,18 @@ def main():
 
     predictions_output_file = (
         output_dir
-        / f"predictions_{args.swe_bench_split}_{args.split}_{transformations}.jsonl"
+        / f"predictions_{args.swe_bench_split}_{args.split}_{transformations_suffix}.jsonl"
     )
     write_jsonl(predictions, predictions_output_file)
 
     cots_output_file = (
-        output_dir / f"cots_{args.swe_bench_split}_{args.split}_{transformations}.jsonl"
+        output_dir / f"cots_{args.swe_bench_split}_{args.split}_{transformations_suffix}.jsonl"
     )
     write_jsonl(cots, cots_output_file)
 
     raw_responses_output_file = (
         output_dir
-        / f"responses_{args.swe_bench_split}_{args.split}_{transformations}.json"
+        / f"responses_{args.swe_bench_split}_{args.split}_{transformations_suffix}.json"
     )
     with open(raw_responses_output_file, "w") as f:
         json.dump(raw_responses, f, indent=2)
