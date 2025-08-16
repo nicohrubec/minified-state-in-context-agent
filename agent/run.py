@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import subprocess
+from typing import Tuple
 
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
@@ -73,6 +74,28 @@ def extract_cot_sections(response):
     }
 
 
+def _flex_pattern_from_literal(block: str) -> str:
+    parts = re.findall(r"\S+|\s+", block)
+    pat_parts = []
+    for p in parts:
+        if p.isspace():
+            pat_parts.append(r"\s+")
+        else:
+            pat_parts.append(re.escape(p))
+    return "".join(pat_parts)
+
+
+def replace_search_block(
+    content: str,
+    search_block: str,
+    replace_block: str,
+) -> Tuple[str, int]:
+    pattern = _flex_pattern_from_literal(search_block)
+    rx = re.compile(pattern, flags=re.DOTALL | re.MULTILINE)
+    new_content, n_replacements = rx.subn(replace_block, content)
+    return new_content, n_replacements
+
+
 def extract_final_patch_as_diff(response_text, repo_dir):
     file_match = re.search(
         r"\*{0,2}Final Patch\*{0,2}\s*-+\s*\n\s*(\S+)", response_text
@@ -115,10 +138,13 @@ def extract_final_patch_as_diff(response_text, repo_dir):
     for search_block, replace_block in edits:
         search_block = search_block.strip()
         replace_block = replace_block.strip()
-        if search_block not in modified_content:
+        modified_content, n_replacements = replace_search_block(
+            original_content, search_block, replace_block
+        )
+
+        if n_replacements <= 0:
             print("Search block could not be found in file content.")
             return None
-        modified_content = modified_content.replace(search_block, replace_block)
 
     target_file.write_text(modified_content)
 

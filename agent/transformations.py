@@ -1,7 +1,6 @@
 from typing import List, Dict
 
 from agent.helpers import is_import_line, is_blank_line
-from agent.source_map import SourceMapEntry
 
 
 def remove_imports(source_files: List[str]):
@@ -57,7 +56,7 @@ def merge_imports(source_files: List[str]):
     return [merged_file] + new_sources
 
 
-def remove_blank_lines(source_files: List[str], plan: Dict[str, List[SourceMapEntry]]):
+def remove_blank_lines(source_files: List[str]):
     new_sources: List[str] = []
 
     for src in source_files:
@@ -68,20 +67,7 @@ def remove_blank_lines(source_files: List[str], plan: Dict[str, List[SourceMapEn
         path = lines[0]
         body = lines[1:]
 
-        if path not in plan:
-            # No changes required
-            new_sources.append("\n".join([path] + body))
-            continue
-
-        removals = plan[path]
-        to_remove = {e.line_no for e in removals}
-
-        kept_body: List[str] = []
-        for i, line in enumerate(body, start=1):
-            if i in to_remove and is_blank_line(line):
-                continue
-            kept_body.append(line)
-
+        kept_body: List[str] = [line for line in body if not is_blank_line(line)]
         new_sources.append("\n".join([path] + kept_body))
 
     return new_sources
