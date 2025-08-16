@@ -41,7 +41,7 @@ def parse_arguments():
         "--transformations",
         nargs="*",
         default=[],
-        choices=["imports", "blank_lines"],
+        choices=["imports_merge", "imports_remove", "blank_lines"],
     )
     return parser.parse_args()
 
