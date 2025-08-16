@@ -41,7 +41,7 @@ def parse_arguments():
         "--transformations",
         nargs="*",
         default=[],
-        choices=["imports"],
+        choices=["imports", "blank_lines"],
     )
     return parser.parse_args()
 
@@ -145,9 +145,7 @@ def main():
             raw_responses.append(raw_response)
 
     if args.skip_repair:
-        metrics_file_name = (
-            f"repair_metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
-        )
+        metrics_file_name = f"repair_metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
     else:
         metrics_file_name = (
             f"metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
@@ -167,7 +165,8 @@ def main():
     write_jsonl(predictions, predictions_output_file)
 
     cots_output_file = (
-        output_dir / f"cots_{args.swe_bench_split}_{args.split}_{transformations_suffix}.jsonl"
+        output_dir
+        / f"cots_{args.swe_bench_split}_{args.split}_{transformations_suffix}.jsonl"
     )
     write_jsonl(cots, cots_output_file)
 

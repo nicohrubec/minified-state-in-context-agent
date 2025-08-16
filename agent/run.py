@@ -233,7 +233,7 @@ def run_agent(
         }
 
     # repair
-    system_prompt, user_prompt, _ = build_repair_prompt(
+    system_prompt, user_prompt, _, source_maps = build_repair_prompt(
         problem, problem_files, hash_to_content, transformations
     )
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
