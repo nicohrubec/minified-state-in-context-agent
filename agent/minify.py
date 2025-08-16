@@ -1,147 +1,13 @@
-from typing import List, Dict
-from dataclasses import dataclass
+from typing import List
+
+from agent.plan import plan_remove_blank_lines
+from agent.transformations import merge_imports, remove_imports, remove_blank_lines
+from agent.helpers import _merge_maps
 
 
 IMPORT_MERGE_TRANSFORMATION_CONST = "imports_merge"
 IMPORT_REMOVE_TRANSFORMATION_CONST = "imports_remove"
 BLANK_LINE_TRANSFORMATION_CONST = "blank_lines"
-
-
-@dataclass
-class SourceMapEntry:
-    original: str
-    transformed: str
-    line_no: int
-    offset: int
-    type: str
-
-
-def is_blank_line(s: str) -> bool:
-    # Treat whitespace-only lines as blank
-    return s.strip() == ""
-
-
-def is_import_line(s: str) -> bool:
-    return s.startswith("import ") or s.startswith("from ")
-
-
-def plan_remove_blank_lines(source_files: List[str]) -> Dict[str, List[SourceMapEntry]]:
-    plan: Dict[str, List[SourceMapEntry]] = {}
-
-    for src in source_files:
-        lines = src.splitlines()
-        if not lines:
-            # Skip malformed entry
-            continue
-
-        path = lines[0]
-        body = lines[1:]
-        removals: List[SourceMapEntry] = []
-
-        for i, line in enumerate(body, start=1):
-            if is_blank_line(line):
-                removals.append(
-                    SourceMapEntry(
-                        original=line,
-                        transformed="",
-                        line_no=i,
-                        offset=0,
-                        type="blank_line",
-                    )
-                )
-
-        if removals:
-            plan[path] = removals
-
-    return plan
-
-
-def remove_imports(source_files: List[str]):
-    new_sources = []
-
-    for src in source_files:
-        lines = src.splitlines()
-        if not lines:
-            continue
-
-        path = lines[0]
-        body_lines = []
-
-        for line in lines[1:]:
-            if is_import_line(line):
-                continue
-
-            body_lines.append(line)
-
-        new_sources.append("\n".join([path] + body_lines))
-
-    return new_sources
-
-
-def merge_imports(source_files: List[str]):
-    merged_imports = []
-    seen = set()
-    new_sources = []
-
-    for src in source_files:
-        lines = src.splitlines()
-        if not lines:
-            continue
-
-        path = lines[0]
-        body_lines = []
-
-        for line in lines[1:]:
-            if is_import_line(line):
-                if line not in seen:
-                    seen.add(line)
-                    merged_imports.append(line)
-            else:
-                body_lines.append(line)
-
-        new_sources.append("\n".join([path] + body_lines))
-
-    if not merged_imports:
-        return source_files
-
-    merged_block = "\n".join(merged_imports)
-    merged_file = "\n".join(["MERGED_IMPORTS", merged_block])
-    return [merged_file] + new_sources
-
-
-def remove_blank_lines(source_files: List[str], plan: Dict[str, List[SourceMapEntry]]):
-    new_sources: List[str] = []
-
-    for src in source_files:
-        lines = src.splitlines()
-        if not lines:
-            continue
-
-        path = lines[0]
-        body = lines[1:]
-
-        if path not in plan:
-            # No changes required
-            new_sources.append("\n".join([path] + body))
-            continue
-
-        removals = plan[path]
-        to_remove = {e.line_no for e in removals}
-
-        kept_body: List[str] = []
-        for i, line in enumerate(body, start=1):
-            if i in to_remove and is_blank_line(line):
-                continue
-            kept_body.append(line)
-
-        new_sources.append("\n".join([path] + kept_body))
-
-    return new_sources
-
-
-def _merge_maps(main_map, merge_map):
-    for p, lst in merge_map.items():
-        main_map.setdefault(p, []).extend(lst)
 
 
 def minify(source_files: List[str], transformations: List[str]):
@@ -157,7 +23,7 @@ def minify(source_files: List[str], transformations: List[str]):
         source_files = merge_imports(source_files)
         transformations.remove(IMPORT_MERGE_TRANSFORMATION_CONST)
     if IMPORT_REMOVE_TRANSFORMATION_CONST in transformations:
-        source_files = merge_imports(source_files)
+        source_files = remove_imports(source_files)
         transformations.remove(IMPORT_REMOVE_TRANSFORMATION_CONST)
     if BLANK_LINE_TRANSFORMATION_CONST in transformations:
         source_files = remove_blank_lines(source_files, blank_line_maps)
