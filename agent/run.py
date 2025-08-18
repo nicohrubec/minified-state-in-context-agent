@@ -1,8 +1,6 @@
 import re
 from pathlib import Path
 import subprocess
-import textwrap
-from typing import Tuple, List
 
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
@@ -75,87 +73,6 @@ def extract_cot_sections(response):
     }
 
 
-_OP_TOKEN_RE = re.compile(
-    r"^(?:\*\*|//|<<|>>|:=|->|==|!=|<=|>=|[+\-*/%&|^~<>=.,:;@()\[\]{}])$"
-)
-_DOCSTRING_BLOCK = (
-    r'[ \t]*(?:[rRuUbBfF]*)?(?:"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')[ \t]*'
-)
-_SEP_REQUIRED = rf"(?:\s+|[ \t]*(?:#[^\n]*)\s*|{_DOCSTRING_BLOCK})+"
-_SEP_OPTIONAL = rf"(?:\s+|[ \t]*(?:#[^\n]*)\s*|{_DOCSTRING_BLOCK})*"
-
-
-def _is_symbolic_op(tok: str) -> bool:
-    if len(tok) == 1 and tok in "+-*/%&|^~<>=.,:;@()[]{}":
-        return True
-    return _OP_TOKEN_RE.match(tok) is not None
-
-
-def _flex_pattern_from_literal(block: str) -> str:
-    parts = re.findall(r"\S+|\s+", block)
-    pat_parts: List[str] = []
-
-    for i, p in enumerate(parts):
-        if p.isspace():
-            # Find nearest non-space neighbors to decide optional vs required sep
-            left = right = None
-            j = i - 1
-            while j >= 0:
-                if not parts[j].isspace():
-                    left = parts[j]
-                    break
-                j -= 1
-            j = i + 1
-            while j < len(parts):
-                if not parts[j].isspace():
-                    right = parts[j]
-                    break
-                j += 1
-
-            if (left and _is_symbolic_op(left)) or (right and _is_symbolic_op(right)):
-                pat_parts.append(_SEP_OPTIONAL)
-            else:
-                pat_parts.append(_SEP_REQUIRED)
-        else:
-            pat_parts.append(re.escape(p))
-    return "".join(pat_parts)
-
-
-def _block_start_anchored_pattern(search_block: str) -> re.Pattern:
-    # Remove only leading indentation on the FIRST line of the search block.
-    first_line_indent = re.match(r"[ \t]*", search_block).group(0)
-    body = search_block[len(first_line_indent) :]
-
-    body_pat = _flex_pattern_from_literal(body)
-
-    # ^(?P<indent>[ \t]*) captures the file's actual indent where the block starts.
-    # DOTALL and MULTILINE are used to allow cross-line matches and ^/$ behavior per line.
-    pat = rf"(?m)^(?P<indent>[ \t]*){body_pat}"
-    return re.compile(pat, flags=re.DOTALL | re.MULTILINE)
-
-
-def _indent_like(block: str, indent: str) -> str:
-    dedented = textwrap.dedent(block)
-    lines = dedented.splitlines(keepends=True)
-    # Prefix the same indent to all lines (including empty ones) to keep structure.
-    return "".join(indent + ln for ln in lines)
-
-
-def replace_search_block(
-    content: str,
-    search_block: str,
-    replace_block: str,
-) -> Tuple[str, int]:
-    rx = _block_start_anchored_pattern(search_block)
-
-    def _repl(m: re.Match) -> str:
-        indent = m.group("indent")
-        return _indent_like(replace_block, indent)
-
-    new_content, n = rx.subn(_repl, content)
-    return new_content, n
-
-
 def extract_final_patch_as_diff(response_text, repo_dir):
     file_match = re.search(
         r"\*{0,2}Final Patch\*{0,2}\s*-+\s*\n\s*(\S+)", response_text
@@ -164,6 +81,7 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         print("File path could not be matched!")
         return None
     file_path = file_match.group(1).strip()
+    file_path = re.sub(r"^#+\s*", "", file_path).strip()
     repo_path = Path(repo_dir)
     target_file = repo_path / file_path
 
@@ -198,13 +116,10 @@ def extract_final_patch_as_diff(response_text, repo_dir):
     for search_block, replace_block in edits:
         search_block = search_block.strip()
         replace_block = replace_block.strip()
-        modified_content, n_replacements = replace_search_block(
-            original_content, search_block, replace_block
-        )
-
-        if n_replacements <= 0:
+        if search_block not in modified_content:
             print("Search block could not be found in file content.")
             return None
+        modified_content = modified_content.replace(search_block, replace_block)
 
     target_file.write_text(modified_content)
 
