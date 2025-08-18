@@ -109,7 +109,6 @@ def remove_docstrings(source_files: List[str]):
             mini.remove_docstrings(tokenized_body)
             new_sources.append(path + "\n" + token_utils.untokenize(tokenized_body))
         except (tokenize.TokenError, IndentationError):
-            print("broke")
             new_sources.append(path + "\n" + body)
 
     return new_sources
