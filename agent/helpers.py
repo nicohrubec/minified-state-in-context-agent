@@ -1,8 +1,3 @@
-def is_blank_line(s: str) -> bool:
-    # Treat whitespace-only lines as blank
-    return s.strip() == ""
-
-
 def is_import_line(s: str) -> bool:
     return s.startswith("import ") or s.startswith("from ")
 

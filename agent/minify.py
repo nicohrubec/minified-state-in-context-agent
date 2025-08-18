@@ -5,6 +5,7 @@ from agent.transformations import (
     remove_imports,
     remove_blank_lines,
     remove_comments,
+    remove_docstrings,
 )
 
 
@@ -12,11 +13,13 @@ IMPORT_MERGE_TRANSFORMATION_CONST = "imports_merge"
 IMPORT_REMOVE_TRANSFORMATION_CONST = "imports_remove"
 BLANK_LINE_TRANSFORMATION_CONST = "blank_lines"
 COMMENTS_REMOVE_TRANSFORMATION_CONST = "comments_remove"
+DOCSTRINGS_REMOVE_TRANSFORMATION_CONST = "docstrings_remove"
 DEFINED_TRANSFORMATIONS = [
     IMPORT_REMOVE_TRANSFORMATION_CONST,
     IMPORT_REMOVE_TRANSFORMATION_CONST,
     BLANK_LINE_TRANSFORMATION_CONST,
     COMMENTS_REMOVE_TRANSFORMATION_CONST,
+    DOCSTRINGS_REMOVE_TRANSFORMATION_CONST,
 ]
 
 
@@ -31,6 +34,8 @@ def minify(source_files: List[str], transformations: List[str]):
         source_files = remove_blank_lines(source_files)
     if COMMENTS_REMOVE_TRANSFORMATION_CONST in transformations:
         source_files = remove_comments(source_files)
+    if DOCSTRINGS_REMOVE_TRANSFORMATION_CONST in transformations:
+        source_files = remove_docstrings(source_files)
 
     unknown_transformations = [
         t for t in transformations if t not in DEFINED_TRANSFORMATIONS

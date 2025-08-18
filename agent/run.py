@@ -74,7 +74,11 @@ def extract_cot_sections(response):
     }
 
 
-_WS_OR_COMMENT = r"(?:\s+|[ \t]*(?:#[^\n]*)\s*)+"
+_DOCSTRING_BLOCK = (
+    r'[ \t]*(?:[rRuUbBfF]*)?(?:"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')[ \t]*'
+)
+
+_WS_OR_COMMENT_OR_DOC = rf"(?:\s+|[ \t]*(?:#[^\n]*)\s*|{_DOCSTRING_BLOCK})+"
 
 
 def _flex_pattern_from_literal(block: str) -> str:
@@ -82,7 +86,7 @@ def _flex_pattern_from_literal(block: str) -> str:
     pat_parts = []
     for p in parts:
         if p.isspace():
-            pat_parts.append(_WS_OR_COMMENT)
+            pat_parts.append(_WS_OR_COMMENT_OR_DOC)
         else:
             pat_parts.append(re.escape(p))
     return "".join(pat_parts)

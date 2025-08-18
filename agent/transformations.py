@@ -1,8 +1,9 @@
 from typing import List
 import tokenize
-import io
 
-from agent.helpers import is_import_line, is_blank_line
+from agent.helpers import is_import_line
+import pyminifier.minification as mini
+import pyminifier.token_utils as token_utils
 
 
 def remove_imports(source_files: List[str]):
@@ -59,19 +60,15 @@ def merge_imports(source_files: List[str]):
 
 
 def remove_blank_lines(source_files: List[str]):
-    new_sources: List[str] = []
-
-    for src in source_files:
-        lines = src.splitlines()
-        if not lines:
-            continue
-
-        path = lines[0]
-        body = lines[1:]
-
-        kept_body: List[str] = [line for line in body if not is_blank_line(line)]
-        new_sources.append("\n".join([path] + kept_body))
-
+    source_paths = [src.splitlines()[0] for src in source_files]
+    source_bodies = ["\n".join(src.splitlines()[1:]) for src in source_files]
+    source_bodies_no_blank_lines = [
+        mini.remove_blank_lines(src_body) for src_body in source_bodies
+    ]
+    new_sources: List[str] = [
+        path + "\n" + body
+        for path, body in zip(source_paths, source_bodies_no_blank_lines)
+    ]
     return new_sources
 
 
@@ -87,11 +84,30 @@ def remove_comments(source_files: List[str]):
         body = "\n".join(lines[1:])
 
         try:
-            # remove comments from file
-            tokens = tokenize.generate_tokens(io.StringIO(body).readline)
-            filtered_tokens = [tok for tok in tokens if tok.type != tokenize.COMMENT]
-            uncommented_body = tokenize.untokenize(filtered_tokens)
-            new_sources.append(path + "\n" + uncommented_body)
+            tokenized_body = token_utils.listified_tokenizer(body)
+            mini.remove_comments(tokenized_body)
+            new_sources.append(path + "\n" + token_utils.untokenize(tokenized_body))
+        except (tokenize.TokenError, IndentationError):
+            new_sources.append(path + "\n" + body)
+
+    return new_sources
+
+
+def remove_docstrings(source_files: List[str]):
+    new_sources: List[str] = []
+
+    for src in source_files:
+        lines = src.splitlines()
+        if not lines:
+            continue
+
+        path = lines[0]
+        body = "\n".join(lines[1:])
+
+        try:
+            tokenized_body = token_utils.listified_tokenizer(body)
+            mini.remove_docstrings(tokenized_body)
+            new_sources.append(path + "\n" + token_utils.untokenize(tokenized_body))
         except (tokenize.TokenError, IndentationError):
             new_sources.append(path + "\n" + body)
 
