@@ -435,7 +435,6 @@ def run_agent(
     transformations,
     token_limit=10000,
 ):
-    print(f"Running agent for problem {problem['instance_id']}")
     problem_files["files"] = [
         file
         for file in problem_files["files"]

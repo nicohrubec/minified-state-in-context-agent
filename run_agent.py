@@ -117,7 +117,9 @@ def main():
     transformations = args.transformations
     transformations_suffix = "_".join(transformations)
 
-    for problem, files in zip(problems, problem_files):
+    for i, (problem, files) in enumerate(zip(problems, problem_files), 1):
+        print(f"Processing problem {i}/{len(problems)}: {problem['instance_id']}")
+
         if args.skip_repair:
             instance_metrics = run_agent(
                 problem,
