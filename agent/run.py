@@ -113,13 +113,20 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         print("No edits found in final patch.")
         return None
 
+    num_applied_edits = 0
     for search_block, replace_block in edits:
         search_block = search_block.strip()
         replace_block = replace_block.strip()
         if search_block not in modified_content:
             print("Search block could not be found in file content.")
-            return None
+            continue
+
         modified_content = modified_content.replace(search_block, replace_block)
+        num_applied_edits += 1
+
+    if num_applied_edits <= 0:
+        print("No edits were applied.")
+        return None
 
     target_file.write_text(modified_content)
 
