@@ -89,7 +89,11 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         print("Target file does not exist!")
         return None
 
-    original_content = target_file.read_text()
+    try:
+        original_content = target_file.read_text()
+    except IsADirectoryError:
+        print("Target file is a directory!")
+        return None
     modified_content = original_content
 
     patch_block_match = re.search(
