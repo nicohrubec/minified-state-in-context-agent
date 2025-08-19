@@ -180,7 +180,7 @@ def build_file_ranking_prompt(problem, problem_files, rank_encoding="list"):
     to the least relevant for fixing the problem.
 
 Note that you should focus on providing specific files. 
-Do not list folders, instead list the specific files you deem relevant.
+Do not under any circumstances list folders, instead list the specific files you deem relevant.
 
 ### GitHub Problem Description ###
 {problem_statement}
