@@ -4,6 +4,7 @@ import subprocess
 import tokenize
 from typing import List, Tuple, Optional
 import io
+import autopep8
 
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
@@ -373,6 +374,7 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         print("No edits were applied.")
         return None
 
+    modified_content = autopep8.fix_code(modified_content, options={"select": ["E1"]})  # fix indentation
     target_file.write_text(modified_content)
 
     try:
