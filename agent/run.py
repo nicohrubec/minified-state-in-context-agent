@@ -367,7 +367,6 @@ def extract_final_patch_as_diff(response_text, repo_dir):
             print("Search block could not be found in file content.")
             continue
 
-        modified_content = modified_content.replace(search_block, replace_block)
         num_applied_edits += 1
 
     if num_applied_edits <= 0:
