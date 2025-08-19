@@ -374,7 +374,9 @@ def extract_final_patch_as_diff(response_text, repo_dir):
         print("No edits were applied.")
         return None
 
-    modified_content = autopep8.fix_code(modified_content, options={"select": ["E1"]})  # fix indentation
+    modified_content = autopep8.fix_code(
+        modified_content, options={"select": ["E1"]}
+    )  # fix indentation
     target_file.write_text(modified_content)
 
     try:
