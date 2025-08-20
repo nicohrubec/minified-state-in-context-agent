@@ -148,11 +148,9 @@ def main():
             raw_responses.append(raw_response)
 
     if args.skip_repair:
-        metrics_file_name = f"repair_metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
+        metrics_file_name = f"repair_metrics_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
     else:
-        metrics_file_name = (
-            f"metrics_{args.swe_bench_split}_{args.split}_{transformations_suffix}.csv"
-        )
+        metrics_file_name = f"metrics_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
 
     metrics_df = pd.DataFrame(metrics)
     metrics_output_file = output_dir / metrics_file_name
@@ -163,19 +161,19 @@ def main():
 
     predictions_output_file = (
         output_dir
-        / f"predictions_{args.swe_bench_split}_{args.split}_{transformations_suffix}.jsonl"
+        / f"predictions_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(predictions, predictions_output_file)
 
     cots_output_file = (
         output_dir
-        / f"cots_{args.swe_bench_split}_{args.split}_{transformations_suffix}.jsonl"
+        / f"cots_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(cots, cots_output_file)
 
     raw_responses_output_file = (
         output_dir
-        / f"responses_{args.swe_bench_split}_{args.split}_{transformations_suffix}.json"
+        / f"responses_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.json"
     )
     with open(raw_responses_output_file, "w") as f:
         json.dump(raw_responses, f, indent=2)
