@@ -58,13 +58,19 @@ def hash_file_content(file_content: str) -> str:
 def clone_repos(problems: list[_SWEBenchProblem], repos_dir: Path):
     """Clones all the repos needed for SWE-bench Verified."""
     repos_dir.mkdir(exist_ok=True, parents=True)
+    repos = {problem.repo for problem in problems}
+    num_repos_in_problems = len(repos)
+    cloned_repos = list(repos_dir.iterdir())
+    num_cloned_repos = len(cloned_repos)
 
-    if len(list(repos_dir.iterdir())):
+    if num_cloned_repos >= num_repos_in_problems:
         print("Skip clone, local copy of repositories already exists.")
         return
 
-    repos = {problem.repo for problem in problems}
     for repo in tqdm.tqdm(repos, desc="Cloning repos"):
+        if repo in cloned_repos:
+            continue
+
         output = subprocess.run(
             ["git", "clone", f"https://github.com/{repo}.git"],
             cwd=repos_dir,
