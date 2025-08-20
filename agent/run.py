@@ -433,7 +433,7 @@ def run_agent(
     skip_repair,
     rank_encoding,
     transformations,
-    token_limit=10000,
+    token_limit=100000,
 ):
     problem_files["files"] = [
         file
