@@ -260,21 +260,48 @@ The format should be as follows:
 - Explain your reasoning and analysis for repairing the identified issue.
 - Describe the necessary modifications, why they are needed, and include any edge‑case considerations.
 
-4. **Final Patch**
-- Provide the final patch using the following exact *SEARCH/REPLACE* format:
-  1. Start with "Final Patch\n-----------" ONCE.
-  2. The file path.
-  3. Provide patches for the file in the SEARCH/REPLACE edit format. For each edit provide ONLY the following:
-    - Start with "<<<<<<< SEARCH"
-    - Then provide the exact lines to search for (i.e. the buggy region). 
-      It is important that this must match the original source EXACTLY, if even a single letter deviates, everything breaks.
-      Keep search regions minimal. Only search for lines that need replacement. For instance, prefer multiple smaller edits over one large edit that regenerates a full function.
-    - End the search region with a new line "=======".
-    - Then provide the replacement lines (i.e. the fixed code).
-    - End the replacement region (and with this also the patch) with ">>>>>>> REPLACE".
-    - Do not add the file path for each SEARCH/REPLACE edit.
-    - Focus patches on code changes, i.e. a patch should never only consist of a comment edit.
+4. ** Final Patch **
+- Provide the final patch using the following exact * SEARCH /
+REPLACE * format :
+  1. The file path .
+  2. The start of the search block : <<<<<<< SEARCH
+  3. A contiguous chunk of lines to search for in the existing source code .
+  4. The dividing line : =======
+  5. The lines to replace into the source code .
+  6. The end of the replace block : >>>>>>> REPLACE
+- ** IMPORTANT :** Enclose each final patch in a separate markdown
+    code block using the tag " python ". Each python block must
+    contain only one search block and one corresponding replace
+    block . If modifications are needed in multiple files , provide
+    one python block per file .
+- Example format :
+``` python
+### path / to / file . py
+<<<<<<< SEARCH
+[ Original code snippet with proper indentation ]
+=======
+[ Replacement code snippet with proper indentation ]
+>>>>>>> REPLACE
+```
 
-Ensure that your chain‑of‑thought reasoning is clearly separated from the final patch. Do not include any evaluation or commentary beyond the four requested steps.
+Requirements :
+- Focus only on the reported issue .
+- Provide minimal , precise changes .
+- Consider error handling and edge cases .
+- Maintain existing code patterns . If you would like to add the
+    line' print ( x )', you must fully write that out , with
+    all those spaces before the code ! Please literally copy the
+    code from the file .
+- Keep search regions minimal. Only search for lines that need replacement. 
+    For instance, prefer multiple smaller edits over one large edit that regenerates a full function.
+- Do not include any evaluation or commentary beyond the four requested steps.
+    
+Your final output must include these sections in the following order :
+1. Chain - of - Thought for Localization
+2. Restated Relevant Code ( enclosed in a``` relevant code``` block
+as specified )
+3. Chain - of - Thought for Repairing the Code
+4. Final Patch ( each file' s modifications enclosed in its own```
+python``` code block with one search / replace pair )
 """
     return system_prompt, user_prompt, all_sources_str, source_maps

@@ -315,83 +315,130 @@ def search_replace_robust(
     return None
 
 
-def extract_final_patch_as_diff(response_text, repo_dir):
-    file_match = re.search(
-        r"\*{0,2}Final Patch\*{0,2}\s*-+\s*\n\s*(\S+)", response_text
-    )
-    if not file_match:
-        print("File path could not be matched!")
-        return None
-    file_path = file_match.group(1).strip()
-    file_path = re.sub(r"^#+\s*", "", file_path).strip()
-    repo_path = Path(repo_dir)
-    target_file = repo_path / file_path
-
-    if not target_file.exists():
-        print("Target file does not exist!")
-        return None
-
-    try:
-        original_content = target_file.read_text()
-    except IsADirectoryError:
-        print("Target file is a directory!")
-        return None
-    modified_content = original_content
-
-    patch_block_match = re.search(
-        r"Final Patch\s*-+\s*" + re.escape(file_path) + r"\s*\n(.*)",
+def _extract_blocks_from_final_patch(response_text: str):
+    m = re.search(
+        r"(?is)^\s*(?:\d+\.\s*)?\*{0,2}Final\s+Patch\*{0,2}\b.*?$",
         response_text,
-        re.DOTALL,
+        re.MULTILINE,
     )
-    if not patch_block_match:
-        print("Final patch block not found!")
-        return None
+    if not m:
+        print("Final Patch section not found!")
+        return []
 
-    patch_block = patch_block_match.group(1)
+    tail = response_text[m.end() :]
 
-    edit_pattern = re.compile(
-        r"<{2,}\s*SEARCH\s*\n(.*?)\n=+\n(.*?)\n>+.*REPLACE",
-        re.DOTALL,
+    # collect all fenced python blocks after Final Patch
+    code_blocks = re.findall(
+        r"```[ \t]*python[ \t]*\n(.*?)\n```", tail, flags=re.IGNORECASE | re.DOTALL
     )
-    edits = edit_pattern.findall(patch_block)
+    if not code_blocks:
+        print("No ```python``` patch blocks found after Final Patch.")
+        return []
 
-    if not edits:
-        print("No edits found in final patch.")
-        return None
-
-    num_applied_edits = 0
-    for search_block, replace_block in edits:
-        search_block = search_block.strip()
-        replace_block = replace_block.strip()
-        modified_content = search_replace_robust(
-            modified_content, search_block, replace_block
-        )
-        if modified_content is None:
-            print("Search block could not be found in file content.")
+    blocks = []
+    for block in code_blocks:
+        lines = block.splitlines()
+        # first non-empty line must be the '### path/to/file' heading
+        path_line = next((ln for ln in lines if ln.strip()), None)
+        if not path_line:
+            print("Patch block missing path line; skipping.")
             continue
 
-        num_applied_edits += 1
+        file_path = re.sub(r"^#+\s*", "", path_line).strip()
 
-    if num_applied_edits <= 0:
-        print("No edits were applied.")
+        # extract SEARCH/REPLACE pairs
+        edit_pattern = re.compile(
+            r"<<{2,}\s*SEARCH\s*\n(.*?)\n=+\n(.*?)\n>+.*REPLACE",
+            re.DOTALL | re.IGNORECASE,
+        )
+        edits = edit_pattern.findall(block)
+        if not edits:
+            print(f"No SEARCH/REPLACE markers found for file '{file_path}'; skipping.")
+            continue
+
+        edits = [(s.strip(), r.strip()) for (s, r) in edits]
+        blocks.append({"file_path": file_path, "edits": edits})
+
+    return blocks
+
+
+def extract_final_patches_as_diff(response_text, repo_dir):
+    repo_path = Path(repo_dir)
+
+    blocks = _extract_blocks_from_final_patch(response_text)
+    if not blocks:
         return None
 
-    modified_content = autopep8.fix_code(
-        modified_content, options={"select": ["E1"]}
-    )  # fix indentation
-    target_file.write_text(modified_content)
+    originals = {}
+    modified = {}
+    targets = []
 
+    for blk in blocks:
+        rel_path = blk["file_path"]
+        if not rel_path:
+            print("Empty file path in a patch block; skipping.")
+            continue
+
+        target = repo_path / rel_path
+        if not target.exists():
+            print(f"Target file does not exist: {rel_path}")
+            continue
+
+        try:
+            content = target.read_text()
+        except IsADirectoryError:
+            print(f"Target is a directory, not a file: {rel_path}")
+            continue
+
+        originals[rel_path] = content
+        modified[rel_path] = content
+        targets.append((rel_path, blk["edits"]))
+
+    if not targets:
+        print("No valid target files to modify.")
+        return None
+
+    num_applied_total = 0
+    for rel_path, edits in targets:
+        current = modified[rel_path]
+        for search_block, replace_block in edits:
+            new_content = search_replace_robust(current, search_block, replace_block)
+            if new_content is None:
+                print(f"[{rel_path}] Search block not found; skipping this edit.")
+                continue
+            current = new_content
+            num_applied_total += 1
+
+        try:
+            current = autopep8.fix_code(current, options={"select": ["E1"]})
+        except Exception as e:
+            print(f"[{rel_path}] autopep8 failed: {e}")
+
+        modified[rel_path] = current
+
+    if num_applied_total <= 0:
+        print("No edits were applied to any file.")
+        return None
+
+    written_paths = []
     try:
-        result = subprocess.run(
-            ["git", "diff", "--", str(target_file)],
-            cwd=repo_path,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        diff_output = result.stdout
+        for rel_path in modified:
+            target = repo_path / rel_path
+            target.write_text(modified[rel_path])
+            written_paths.append(rel_path)
+
+        try:
+            cmd = ["git", "diff", "--"] + [str(Path(p)) for p in written_paths]
+            result = subprocess.run(
+                cmd, cwd=repo_path, capture_output=True, text=True, check=True
+            )
+            diff_output = result.stdout
+        except subprocess.CalledProcessError as e:
+            print(f"git diff failed: {e}")
+            diff_output = None
     finally:
-        target_file.write_text(original_content)
+        for rel_path, content in originals.items():
+            (repo_path / rel_path).write_text(content)
 
     return diff_output
 
@@ -504,7 +551,7 @@ def run_agent(
         chain_of_thoughts = extract_cot_sections(response)
         chain_of_thoughts["instance_id"] = instance_id
 
-        patch = extract_final_patch_as_diff(response, repo_dir)
+        patch = extract_final_patches_as_diff(response, repo_dir)
 
         if patch is not None:
             break
