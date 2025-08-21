@@ -10,6 +10,8 @@ from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
 from shared.tokens import count_tokens
 
+MAX_ATTEMPTS = 5
+
 
 def filter_problem_files_with_ranking(
     problem_files, hash_to_content, ranked_paths, token_limit
@@ -493,13 +495,25 @@ def run_agent(
         problem, problem_files, hash_to_content, transformations
     )
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
-    response = call_gpt(system_prompt, user_prompt)
-    num_repair_output_tokens = count_tokens(response)
 
-    chain_of_thoughts = extract_cot_sections(response)
-    chain_of_thoughts["instance_id"] = instance_id
+    attempt = 1
+    while attempt <= MAX_ATTEMPTS:
+        response = call_gpt(system_prompt, user_prompt)
+        num_repair_output_tokens = count_tokens(response)
 
-    patch = extract_final_patch_as_diff(response, repo_dir)
+        chain_of_thoughts = extract_cot_sections(response)
+        chain_of_thoughts["instance_id"] = instance_id
+
+        patch = extract_final_patch_as_diff(response, repo_dir)
+
+        if patch is not None:
+            break
+
+        print(f"Attempt {attempt} of obtaining a patch failed. Retry ...")
+        attempt += 1
+
+    if attempt > MAX_ATTEMPTS:
+        print("Max number of attempts reached without obtaining a valid patch.")
 
     prediction = (
         {
