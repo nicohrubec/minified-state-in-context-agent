@@ -297,7 +297,7 @@ def search_replace_robust(
         if pos != -1:
             abs_s, abs_e = _spans_for_join_index(hay_cmap, pos, len(needle_joined))
             return original_content[:abs_s] + replace_block + original_content[abs_e:]
-    except tokenize.TokenError:
+    except (tokenize.TokenError, IndentationError):
         pass  # fall through to fallback
 
     # Fallback: ultra-robust, approximate normalization
