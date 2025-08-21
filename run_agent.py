@@ -117,6 +117,7 @@ def main():
     transformations = args.transformations
     transformations_suffix = "_".join(transformations)
 
+    num_failed_predictions = 0
     for i, (problem, files) in enumerate(zip(problems, problem_files), 1):
         print(f"Processing problem {i}/{len(problems)}: {problem['instance_id']}")
 
@@ -147,6 +148,9 @@ def main():
             metrics.append(instance_metrics)
             raw_responses.append(raw_response)
 
+            if prediction["model_patch"] == "":
+                num_failed_predictions += 1
+
     if args.skip_repair:
         metrics_file_name = f"repair_metrics_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
     else:
@@ -159,6 +163,7 @@ def main():
     if args.skip_repair:
         return
 
+    print(f"Number of failed predictions: {num_failed_predictions}")
     predictions_output_file = (
         output_dir
         / f"predictions_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
