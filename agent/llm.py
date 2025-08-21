@@ -16,7 +16,7 @@ def call_gpt(system_prompt, user_prompt):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_completion_tokens=100000,
+        max_completion_tokens=32768,
         temperature=0.8,
         model=deployment,
     )
