@@ -362,7 +362,7 @@ def _extract_blocks_from_final_patch(response_text: str):
     return blocks
 
 
-def extract_final_patches_as_diff(response_text, repo_dir):
+def extract_final_patches_as_diff(response_text, repo_dir, run_formatter):
     repo_path = Path(repo_dir)
 
     blocks = _extract_blocks_from_final_patch(response_text)
@@ -409,10 +409,11 @@ def extract_final_patches_as_diff(response_text, repo_dir):
             current = new_content
             num_applied_total += 1
 
-        try:
-            current = autopep8.fix_code(current, options={"select": ["E1"]})
-        except Exception as e:
-            print(f"[{rel_path}] autopep8 failed: {e}")
+        if run_formatter:
+            try:
+                current = autopep8.fix_code(current, options={"select": ["E1"]})
+            except Exception as e:
+                print(f"[{rel_path}] autopep8 failed: {e}")
 
         modified[rel_path] = current
 
@@ -544,6 +545,7 @@ def run_agent(
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
 
     attempt = 1
+    run_formatter = True if "dedent" in transformations else False
     while attempt <= MAX_ATTEMPTS:
         response = call_gpt(system_prompt, user_prompt)
         num_repair_output_tokens = count_tokens(response)
@@ -551,7 +553,7 @@ def run_agent(
         chain_of_thoughts = extract_cot_sections(response)
         chain_of_thoughts["instance_id"] = instance_id
 
-        patch = extract_final_patches_as_diff(response, repo_dir)
+        patch = extract_final_patches_as_diff(response, repo_dir, run_formatter)
 
         if patch is not None:
             break

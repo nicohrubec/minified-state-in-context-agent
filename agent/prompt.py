@@ -295,6 +295,8 @@ Requirements :
 - Keep search regions minimal. Only search for lines that need replacement. 
     For instance, prefer multiple smaller edits over one large edit that regenerates a full function.
 - Do not include any evaluation or commentary beyond the four requested steps.
+- Do not add code that needs any additional dependencies.
+- Do not alter docstrings or comments.
     
 Your final output must include these sections in the following order :
 1. Chain - of - Thought for Localization
