@@ -1,9 +1,11 @@
 from typing import List
 import tokenize
+import re
 
 from agent.helpers import is_import_line
 import pyminifier.minification as mini
 import pyminifier.token_utils as token_utils
+import pyminifier.obfuscate as obfuscate
 
 
 def remove_imports(source_files: List[str]):
@@ -148,3 +150,66 @@ def reduce_operators(source_files: List[str]):
         path + "\n" + body for path, body in zip(source_paths, new_source_bodies)
     ]
     return new_sources
+
+
+def shorten_vars(source_files: List[str]):
+    new_sources: List[str] = []
+    obfuscate.VAR_REPLACEMENTS.clear()
+
+    name_generator = obfuscate.obfuscation_machine(
+        use_unicode=False, identifier_length=1
+    )
+
+    for src in source_files:
+        lines = src.splitlines()
+        if not lines:
+            continue
+
+        path = lines[0]
+        body = "\n".join(lines[1:])
+
+        try:
+            tokenized_body = token_utils.listified_tokenizer(body)
+
+            variables = obfuscate.find_obfuscatables(
+                tokenized_body, obfuscate.obfuscatable_variable, ignore_length=False
+            )
+
+            for variable in variables:
+                obfuscate.replace_obfuscatables(
+                    "module",
+                    tokenized_body,
+                    obfuscate.obfuscate_variable,
+                    variable,
+                    name_generator,
+                )
+
+            new_sources.append(path + "\n" + token_utils.untokenize(tokenized_body))
+        except (tokenize.TokenError, IndentationError):
+            new_sources.append(path + "\n" + body)
+
+    return new_sources, obfuscate.VAR_REPLACEMENTS.copy()
+
+
+def reverse_variable_shortening(source_file: str, replacements: dict):
+    lines = source_file.splitlines()
+    if not lines:
+        return source_file
+
+    path = lines[0]
+    body = "\n".join(lines[1:])
+
+    reversed_body = body
+    for shortened_name, original_name in replacements.items():
+        pattern = r"\b" + re.escape(shortened_name) + r"\b"
+        reversed_body = re.sub(pattern, original_name, reversed_body)
+
+    return path + "\n" + reversed_body
+
+
+def shorten_funcs(source_files: List[str]):
+    pass
+
+
+def shorten_classes(source_files: List[str]):
+    pass

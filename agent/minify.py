@@ -8,6 +8,7 @@ from agent.transformations import (
     remove_docstrings,
     dedent,
     reduce_operators,
+    shorten_vars,
 )
 
 
@@ -18,6 +19,9 @@ COMMENTS_REMOVE_TRANSFORMATION_CONST = "remove_comments"
 DOCSTRINGS_REMOVE_TRANSFORMATION_CONST = "remove_docstrings"
 DEDENT_TRANSFORMATION_CONST = "dedent"
 REDUCE_OPERATORS_TRANSFORMATION_CONST = "reduce_operators"
+SHORT_VARS_TRANSFORMATION_CONST = "short_vars"
+SHORT_FUNCS_TRANSFORMATION_CONST = "short_funcs"
+SHORT_CLASSES_TRANSFORMATION_CONST = "short_classes"
 DEFINED_TRANSFORMATIONS = [
     IMPORT_REMOVE_TRANSFORMATION_CONST,
     IMPORT_MERGE_TRANSFORMATION_CONST,
@@ -26,6 +30,9 @@ DEFINED_TRANSFORMATIONS = [
     DOCSTRINGS_REMOVE_TRANSFORMATION_CONST,
     DEDENT_TRANSFORMATION_CONST,
     REDUCE_OPERATORS_TRANSFORMATION_CONST,
+    SHORT_VARS_TRANSFORMATION_CONST,
+    SHORT_FUNCS_TRANSFORMATION_CONST,
+    SHORT_CLASSES_TRANSFORMATION_CONST,
 ]
 
 
@@ -46,6 +53,13 @@ def minify(source_files: List[str], transformations: List[str]):
         source_files = dedent(source_files)
     if REDUCE_OPERATORS_TRANSFORMATION_CONST in transformations:
         source_files = reduce_operators(source_files)
+    if SHORT_VARS_TRANSFORMATION_CONST in transformations:
+        source_files, short_vars_source_maps = shorten_vars(source_files)
+        source_maps[SHORT_VARS_TRANSFORMATION_CONST] = short_vars_source_maps
+    if SHORT_FUNCS_TRANSFORMATION_CONST in transformations:
+        pass
+    if SHORT_CLASSES_TRANSFORMATION_CONST in transformations:
+        pass
 
     unknown_transformations = [
         t for t in transformations if t not in DEFINED_TRANSFORMATIONS

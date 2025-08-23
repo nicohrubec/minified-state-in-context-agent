@@ -9,6 +9,8 @@ import autopep8
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
 from shared.tokens import count_tokens
+from agent.transformations import reverse_variable_shortening
+from agent.minify import SHORT_VARS_TRANSFORMATION_CONST
 
 MAX_ATTEMPTS = 5
 
@@ -362,12 +364,39 @@ def _extract_blocks_from_final_patch(response_text: str):
     return blocks
 
 
-def extract_final_patches_as_diff(response_text, repo_dir):
+def reverse_variable_shortening_in_blocks(blocks, source_maps):
+    new_blocks = []
+    for block in blocks:
+        new_block = {
+            "file_path": block["file_path"],
+            "edits": [],
+        }
+        for edit in block["edits"]:
+            search_block, replace_block = edit
+            reversed_search = reverse_variable_shortening(
+                search_block, source_maps[SHORT_VARS_TRANSFORMATION_CONST]
+            )
+            reversed_replace = reverse_variable_shortening(
+                replace_block, source_maps[SHORT_VARS_TRANSFORMATION_CONST]
+            )
+
+            new_block["edits"].append((reversed_search, reversed_replace))
+
+        new_blocks.append(new_block)
+
+    return new_blocks
+
+
+def extract_final_patches_as_diff(response_text, repo_dir, source_maps=None):
     repo_path = Path(repo_dir)
 
     blocks = _extract_blocks_from_final_patch(response_text)
     if not blocks:
         return None
+
+    if source_maps and SHORT_VARS_TRANSFORMATION_CONST in source_maps:
+        print("Reversing variable shortening transformations...")
+        blocks = reverse_variable_shortening_in_blocks(blocks, source_maps)
 
     originals = {}
     modified = {}
@@ -551,7 +580,7 @@ def run_agent(
         chain_of_thoughts = extract_cot_sections(response)
         chain_of_thoughts["instance_id"] = instance_id
 
-        patch = extract_final_patches_as_diff(response, repo_dir)
+        patch = extract_final_patches_as_diff(response, repo_dir, source_maps)
 
         if patch is not None:
             break
