@@ -8,8 +8,9 @@ from agent.transformations import (
     remove_docstrings,
     dedent,
     reduce_operators,
-    shorten_vars,
+    shorten,
 )
+import pyminifier.obfuscate as obfuscate
 
 
 IMPORT_MERGE_TRANSFORMATION_CONST = "merge_imports"
@@ -54,12 +55,27 @@ def minify(source_files: List[str], transformations: List[str]):
     if REDUCE_OPERATORS_TRANSFORMATION_CONST in transformations:
         source_files = reduce_operators(source_files)
     if SHORT_VARS_TRANSFORMATION_CONST in transformations:
-        source_files, short_vars_source_maps = shorten_vars(source_files)
-        source_maps[SHORT_VARS_TRANSFORMATION_CONST] = short_vars_source_maps
+        obfuscate.VAR_REPLACEMENTS.clear()
+        source_files = shorten(
+            source_files, obfuscate.obfuscatable_variable, obfuscate.obfuscate_variable
+        )
+        source_maps[SHORT_VARS_TRANSFORMATION_CONST] = obfuscate.VAR_REPLACEMENTS.copy()
     if SHORT_FUNCS_TRANSFORMATION_CONST in transformations:
-        pass
+        obfuscate.FUNC_REPLACEMENTS.clear()
+        source_files = shorten(
+            source_files, obfuscate.obfuscatable_function, obfuscate.obfuscate_function
+        )
+        source_maps[SHORT_FUNCS_TRANSFORMATION_CONST] = (
+            obfuscate.FUNC_REPLACEMENTS.copy()
+        )
     if SHORT_CLASSES_TRANSFORMATION_CONST in transformations:
-        pass
+        obfuscate.CLASS_REPLACEMENTS.clear()
+        source_files = shorten(
+            source_files, obfuscate.obfuscatable_class, obfuscate.obfuscate_class
+        )
+        source_maps[SHORT_CLASSES_TRANSFORMATION_CONST] = (
+            obfuscate.CLASS_REPLACEMENTS.copy()
+        )
 
     unknown_transformations = [
         t for t in transformations if t not in DEFINED_TRANSFORMATIONS

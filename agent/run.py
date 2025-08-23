@@ -9,8 +9,12 @@ import autopep8
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
 from shared.tokens import count_tokens
-from agent.transformations import reverse_variable_shortening
-from agent.minify import SHORT_VARS_TRANSFORMATION_CONST
+from agent.transformations import reverse_shortening
+from agent.minify import (
+    SHORT_VARS_TRANSFORMATION_CONST,
+    SHORT_FUNCS_TRANSFORMATION_CONST,
+    SHORT_CLASSES_TRANSFORMATION_CONST,
+)
 
 MAX_ATTEMPTS = 5
 
@@ -364,7 +368,7 @@ def _extract_blocks_from_final_patch(response_text: str):
     return blocks
 
 
-def reverse_variable_shortening_in_blocks(blocks, source_maps):
+def reverse_shortening_in_blocks(blocks, source_maps):
     new_blocks = []
     for block in blocks:
         new_block = {
@@ -373,15 +377,9 @@ def reverse_variable_shortening_in_blocks(blocks, source_maps):
         }
         for edit in block["edits"]:
             search_block, replace_block = edit
-            reversed_search = reverse_variable_shortening(
-                search_block, source_maps[SHORT_VARS_TRANSFORMATION_CONST]
-            )
-            reversed_replace = reverse_variable_shortening(
-                replace_block, source_maps[SHORT_VARS_TRANSFORMATION_CONST]
-            )
-
+            reversed_search = reverse_shortening(search_block, source_maps)
+            reversed_replace = reverse_shortening(replace_block, source_maps)
             new_block["edits"].append((reversed_search, reversed_replace))
-
         new_blocks.append(new_block)
 
     return new_blocks
@@ -394,9 +392,22 @@ def extract_final_patches_as_diff(response_text, repo_dir, source_maps=None):
     if not blocks:
         return None
 
+    # reverse shortening transformations
     if source_maps and SHORT_VARS_TRANSFORMATION_CONST in source_maps:
         print("Reversing variable shortening transformations...")
-        blocks = reverse_variable_shortening_in_blocks(blocks, source_maps)
+        blocks = reverse_shortening_in_blocks(
+            blocks, source_maps[SHORT_VARS_TRANSFORMATION_CONST]
+        )
+    if source_maps and SHORT_FUNCS_TRANSFORMATION_CONST in source_maps:
+        print("Reversing function shortening transformations...")
+        blocks = reverse_shortening_in_blocks(
+            blocks, source_maps[SHORT_FUNCS_TRANSFORMATION_CONST]
+        )
+    if source_maps and SHORT_CLASSES_TRANSFORMATION_CONST in source_maps:
+        print("Reversing class shortening transformations...")
+        blocks = reverse_shortening_in_blocks(
+            blocks, source_maps[SHORT_CLASSES_TRANSFORMATION_CONST]
+        )
 
     originals = {}
     modified = {}

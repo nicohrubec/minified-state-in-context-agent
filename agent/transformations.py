@@ -152,13 +152,12 @@ def reduce_operators(source_files: List[str]):
     return new_sources
 
 
-def shorten_vars(source_files: List[str]):
-    new_sources: List[str] = []
-    obfuscate.VAR_REPLACEMENTS.clear()
+name_generator = obfuscate.obfuscation_machine(use_unicode=False, identifier_length=1)
 
-    name_generator = obfuscate.obfuscation_machine(
-        use_unicode=False, identifier_length=1
-    )
+
+def shorten(source_files: List[str], find_obfunc, replace_obfunc):
+    global name_generator
+    new_sources: List[str] = []
 
     for src in source_files:
         lines = src.splitlines()
@@ -171,16 +170,16 @@ def shorten_vars(source_files: List[str]):
         try:
             tokenized_body = token_utils.listified_tokenizer(body)
 
-            variables = obfuscate.find_obfuscatables(
-                tokenized_body, obfuscate.obfuscatable_variable, ignore_length=False
+            obfuscatables = obfuscate.find_obfuscatables(
+                tokenized_body, find_obfunc, ignore_length=False
             )
 
-            for variable in variables:
+            for obfuscatable in obfuscatables:
                 obfuscate.replace_obfuscatables(
-                    "module",
+                    path,
                     tokenized_body,
-                    obfuscate.obfuscate_variable,
-                    variable,
+                    replace_obfunc,
+                    obfuscatable,
                     name_generator,
                 )
 
@@ -188,28 +187,65 @@ def shorten_vars(source_files: List[str]):
         except (tokenize.TokenError, IndentationError):
             new_sources.append(path + "\n" + body)
 
-    return new_sources, obfuscate.VAR_REPLACEMENTS.copy()
+    return new_sources
 
 
-def reverse_variable_shortening(source_file: str, replacements: dict):
-    lines = source_file.splitlines()
-    if not lines:
+def reverse_shortening(source_file: str, replacements: dict):
+    try:
+        lines = source_file.splitlines()
+        result_lines = []
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+
+            # Check if this line starts a multiline string
+            if '"""' in stripped or "'''" in stripped:
+                # Find the delimiter
+                delimiter = '"""' if '"""' in stripped else "'''"
+                start_count = stripped.count(delimiter)
+
+                if start_count >= 2:
+                    # Single-line docstring - keep unchanged
+                    result_lines.append(line)
+                else:
+                    # Multiline docstring - collect all lines until closing delimiter
+                    result_lines.append(line)
+                    i += 1
+                    while i < len(lines) and delimiter not in lines[i]:
+                        result_lines.append(lines[i])
+                        i += 1
+                    if i < len(lines):
+                        result_lines.append(lines[i])
+            else:
+                # Regular line - check for inline comments and apply replacements
+                comment_pos = line.find("#")
+                if comment_pos != -1:
+                    # Split line into code and comment parts
+                    code_part = line[:comment_pos]
+                    comment_part = line[comment_pos:]
+
+                    # Apply replacements only to code part
+                    modified_code = code_part
+                    for shortened_name, original_name in replacements.items():
+                        pattern = r"\b" + re.escape(shortened_name) + r"\b"
+                        modified_code = re.sub(pattern, original_name, modified_code)
+
+                    # Reconstruct line with modified code and unchanged comment
+                    result_lines.append(modified_code + comment_part)
+                else:
+                    # No comment - apply replacements to entire line
+                    modified_line = line
+                    for shortened_name, original_name in replacements.items():
+                        pattern = r"\b" + re.escape(shortened_name) + r"\b"
+                        modified_line = re.sub(pattern, original_name, modified_line)
+                    result_lines.append(modified_line)
+
+            i += 1
+
+        return "\n".join(result_lines)
+
+    except Exception as e:
+        print(f"Error in reverse_shortening: {e}")
         return source_file
-
-    path = lines[0]
-    body = "\n".join(lines[1:])
-
-    reversed_body = body
-    for shortened_name, original_name in replacements.items():
-        pattern = r"\b" + re.escape(shortened_name) + r"\b"
-        reversed_body = re.sub(pattern, original_name, reversed_body)
-
-    return path + "\n" + reversed_body
-
-
-def shorten_funcs(source_files: List[str]):
-    pass
-
-
-def shorten_classes(source_files: List[str]):
-    pass
