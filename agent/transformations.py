@@ -152,11 +152,53 @@ def reduce_operators(source_files: List[str]):
     return new_sources
 
 
-name_generator = obfuscate.obfuscation_machine(use_unicode=False, identifier_length=1)
+def collect_existing_names(source_files: List[str]):
+    existing_names = set()
+
+    for src in source_files:
+        lines = src.splitlines()
+        if not lines:
+            continue
+
+        body = "\n".join(lines[1:])
+
+        try:
+            tokenized_body = token_utils.listified_tokenizer(body)
+
+            for token in tokenized_body:
+                token_type = token[0]
+                token_string = token[1]
+
+                if token_type == tokenize.NAME:
+                    existing_names.add(token_string)
+
+        except (tokenize.TokenError, IndentationError):
+            pass
+
+    return existing_names
+
+
+def create_conflict_avoiding_generator(
+    existing_names, use_unicode=False, identifier_length=1
+):
+    original_generator = obfuscate.obfuscation_machine(
+        use_unicode=use_unicode, identifier_length=identifier_length
+    )
+
+    def conflict_avoiding_generator():
+        for name in original_generator:
+            if name not in existing_names:
+                yield name
+
+    return conflict_avoiding_generator()
 
 
 def shorten(source_files: List[str], find_obfunc, replace_obfunc):
-    global name_generator
+    existing_names = collect_existing_names(source_files)
+    safe_name_generator = create_conflict_avoiding_generator(
+        existing_names, use_unicode=False, identifier_length=2
+    )
+
     new_sources: List[str] = []
 
     for src in source_files:
@@ -180,7 +222,7 @@ def shorten(source_files: List[str], find_obfunc, replace_obfunc):
                     tokenized_body,
                     replace_obfunc,
                     obfuscatable,
-                    name_generator,
+                    safe_name_generator,
                 )
 
             new_sources.append(path + "\n" + token_utils.untokenize(tokenized_body))
