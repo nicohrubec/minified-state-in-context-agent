@@ -9,6 +9,7 @@ from agent.transformations import (
     dedent,
     reduce_operators,
     shorten,
+    shorten_with_source_map,
 )
 import pyminifier.obfuscate as obfuscate
 
@@ -23,6 +24,9 @@ REDUCE_OPERATORS_TRANSFORMATION_CONST = "reduce_operators"
 SHORT_VARS_TRANSFORMATION_CONST = "short_vars"
 SHORT_FUNCS_TRANSFORMATION_CONST = "short_funcs"
 SHORT_CLASSES_TRANSFORMATION_CONST = "short_classes"
+SHORT_VARS_MAP_TRANSFORMATION_CONST = "short_vars_map"
+SHORT_FUNCS_MAP_TRANSFORMATION_CONST = "short_funcs_map"
+SHORT_CLASSES_MAP_TRANSFORMATION_CONST = "short_classes_map"
 DEFINED_TRANSFORMATIONS = [
     IMPORT_REMOVE_TRANSFORMATION_CONST,
     IMPORT_MERGE_TRANSFORMATION_CONST,
@@ -34,6 +38,9 @@ DEFINED_TRANSFORMATIONS = [
     SHORT_VARS_TRANSFORMATION_CONST,
     SHORT_FUNCS_TRANSFORMATION_CONST,
     SHORT_CLASSES_TRANSFORMATION_CONST,
+    SHORT_VARS_MAP_TRANSFORMATION_CONST,
+    SHORT_FUNCS_MAP_TRANSFORMATION_CONST,
+    SHORT_CLASSES_MAP_TRANSFORMATION_CONST,
 ]
 
 
@@ -76,6 +83,21 @@ def minify(source_files: List[str], transformations: List[str]):
         source_maps[SHORT_CLASSES_TRANSFORMATION_CONST] = (
             obfuscate.CLASS_REPLACEMENTS.copy()
         )
+    if SHORT_VARS_MAP_TRANSFORMATION_CONST in transformations:
+        source_files, var_source_map = shorten_with_source_map(
+            source_files, obfuscate.obfuscatable_variable
+        )
+        source_maps[SHORT_VARS_MAP_TRANSFORMATION_CONST] = var_source_map
+    if SHORT_FUNCS_MAP_TRANSFORMATION_CONST in transformations:
+        source_files, func_source_map = shorten_with_source_map(
+            source_files, obfuscate.obfuscatable_function
+        )
+        source_maps[SHORT_FUNCS_MAP_TRANSFORMATION_CONST] = func_source_map
+    if SHORT_CLASSES_MAP_TRANSFORMATION_CONST in transformations:
+        source_files, class_source_map = shorten_with_source_map(
+            source_files, obfuscate.obfuscatable_class
+        )
+        source_maps[SHORT_CLASSES_MAP_TRANSFORMATION_CONST] = class_source_map
 
     unknown_transformations = [
         t for t in transformations if t not in DEFINED_TRANSFORMATIONS

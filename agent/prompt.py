@@ -220,11 +220,35 @@ def build_repair_prompt(problem, problem_files, hash_to_content, transformations
     all_sources, source_maps = minify(all_sources, transformations)
     all_sources_str = "\n\n".join(all_sources)
 
+    # Check if any source map transformations were applied
+    source_map_transformations = [
+        "shorten_vars_map",
+        "shorten_funcs_map",
+        "shorten_classes_map",
+    ]
+    has_source_maps = any(
+        transformation in source_maps for transformation in source_map_transformations
+    )
+
+    # Build source map context if any source map transformations were applied
+    source_map_context = ""
+    if has_source_maps:
+        source_map_context = "\n\n# SOURCE MAPS (for shortened identifiers):\n"
+        source_map_context += "The following mappings show the relationship between shortened identifiers and their original names:\n"
+
+        for transformation, mapping in source_maps.items():
+            if transformation in source_map_transformations and mapping:
+                source_map_context += f"\n## {transformation}:\n"
+                for shortened, original in mapping.items():
+                    source_map_context += f"- `{shortened}` -> `{original}`\n"
+
     system_prompt = "You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description."
     user_prompt = f"""# REPOSITORY STRUCTURE:
 --------------------
 {all_sources_str}
 --------------------
+
+{source_map_context}
 
 ###########################
 # ISSUE DESCRIPTION:

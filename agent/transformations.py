@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Dict
 import tokenize
 import re
 
@@ -6,6 +6,7 @@ from agent.helpers import is_import_line
 import pyminifier.minification as mini
 import pyminifier.token_utils as token_utils
 import pyminifier.obfuscate as obfuscate
+from shared.tokens import count_tokens
 
 
 def remove_imports(source_files: List[str]):
@@ -230,6 +231,65 @@ def shorten(source_files: List[str], find_obfunc, replace_obfunc):
             new_sources.append(path + "\n" + body)
 
     return new_sources
+
+
+def shorten_with_source_map(
+    source_files: List[str], find_obfunc
+) -> Tuple[List[str], Dict[str, str]]:
+    existing_names = collect_existing_names(source_files)
+    safe_name_generator = create_conflict_avoiding_generator(
+        existing_names, use_unicode=False, identifier_length=2
+    )
+
+    new_sources: List[str] = []
+    source_map: Dict[str, str] = {}
+
+    for src in source_files:
+        lines = src.splitlines()
+        if not lines:
+            continue
+
+        path = lines[0]
+        body = "\n".join(lines[1:])
+
+        try:
+            tokenized_body = token_utils.listified_tokenizer(body)
+
+            obfuscatables = obfuscate.find_obfuscatables(
+                tokenized_body, find_obfunc, ignore_length=False
+            )
+
+            # analyze each obfuscatable to determine if replacement is worth it
+            for obfuscatable in obfuscatables:
+                if obfuscatable is None:
+                    continue
+
+                # count the occurrences of this obfuscatable in the current file
+                occurrence_count = 0
+                for token in tokenized_body:
+                    if token[0] == tokenize.NAME and token[1] == obfuscatable:
+                        occurrence_count += 1
+
+                if occurrence_count > 1 and count_tokens(obfuscatable) > 2:
+                    shortened_name = next(safe_name_generator)
+
+                    for i, token in enumerate(tokenized_body):
+                        if token[0] == tokenize.NAME and token[1] == obfuscatable:
+                            tokenized_body[i] = (
+                                token[0],
+                                shortened_name,
+                                token[2],
+                                token[3],
+                                token[4],
+                            )
+
+                    source_map[shortened_name] = obfuscatable
+
+            new_sources.append(path + "\n" + token_utils.untokenize(tokenized_body))
+        except (tokenize.TokenError, IndentationError):
+            new_sources.append(path + "\n" + body)
+
+    return new_sources, source_map
 
 
 def reverse_shortening(source_file: str, replacements: dict):
