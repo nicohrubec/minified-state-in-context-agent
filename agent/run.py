@@ -4,7 +4,6 @@ import subprocess
 import tokenize
 from typing import List, Tuple, Optional
 import io
-import autopep8
 
 from agent.prompt import build_file_ranking_prompt, build_repair_prompt
 from agent.llm import call_gpt
@@ -461,11 +460,6 @@ def extract_final_patches_as_diff(response_text, repo_dir, source_maps=None):
                 continue
             current = new_content
             num_applied_total += 1
-
-        try:
-            current = autopep8.fix_code(current, options={"select": ["E1"]})
-        except Exception as e:
-            print(f"[{rel_path}] autopep8 failed: {e}")
 
         modified[rel_path] = current
 
