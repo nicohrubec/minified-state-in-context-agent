@@ -99,6 +99,19 @@ class MatchError(Exception):
     pass
 
 
+def extract_paths_from_response(response):
+    code_block_pattern = r"```(?:[\w]*\n)?(.*?)```"
+    code_block_match = re.search(code_block_pattern, response, re.DOTALL)
+
+    if code_block_match:
+        code_block_content = code_block_match.group(1).strip()
+        return [
+            line.strip() for line in code_block_content.splitlines() if line.strip()
+        ]
+    else:
+        return [line.strip() for line in response.splitlines() if line.strip()]
+
+
 def _line_starts(text: str) -> List[int]:
     # Absolute index of each line start
     starts = [0]
@@ -544,7 +557,7 @@ def run_agent(
     num_ranking_output_tokens = count_tokens(response)
 
     # 2. filter based on ranking
-    ranked_paths = [line.strip() for line in response.splitlines() if line.strip()]
+    ranked_paths = extract_paths_from_response(response)
     decoded_ranked_paths = decode_paths(ranked_paths, replacements)
     problem_files, selected_paths = filter_problem_files_with_ranking(
         problem_files, hash_to_content, decoded_ranked_paths, token_limit
