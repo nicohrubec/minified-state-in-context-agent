@@ -109,6 +109,14 @@ def main():
     output_dir = args.output_directory
     output_dir.mkdir(exist_ok=True, parents=True)
 
+    metrics_dir = output_dir / "metrics"
+    predictions_dir = output_dir / "predictions"
+    cots_dir = output_dir / "chain_of_thought"
+    responses_dir = output_dir / "raw_responses"
+
+    for subdir in [metrics_dir, predictions_dir, cots_dir, responses_dir]:
+        subdir.mkdir(exist_ok=True, parents=True)
+
     predictions = []
     cots = []
     metrics = []
@@ -157,7 +165,7 @@ def main():
         metrics_file_name = f"metrics_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
 
     metrics_df = pd.DataFrame(metrics)
-    metrics_output_file = output_dir / metrics_file_name
+    metrics_output_file = metrics_dir / metrics_file_name
     metrics_df.to_csv(metrics_output_file, index=False)
 
     if args.skip_repair:
@@ -165,19 +173,19 @@ def main():
 
     print(f"Number of failed predictions: {num_failed_predictions}")
     predictions_output_file = (
-        output_dir
+        predictions_dir
         / f"predictions_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(predictions, predictions_output_file)
 
     cots_output_file = (
-        output_dir
+        cots_dir
         / f"cots_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(cots, cots_output_file)
 
     raw_responses_output_file = (
-        output_dir
+        responses_dir
         / f"responses_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.json"
     )
     with open(raw_responses_output_file, "w") as f:
