@@ -104,7 +104,7 @@ The agent uses a two-stage approach:
 
 ### Analyze ranking results
 ```bash
-python analysis/analyze_ranking.py
+python analysis/ranking.py
 ```
 
 This script analyzes the ranking performance and cost metrics across different encoding methods. It generates:
