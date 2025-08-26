@@ -18,7 +18,7 @@ def call_gpt(system_prompt, user_prompt, model="gpt-4.1"):
                     {"role": "user", "content": user_prompt},
                 ],
                 max_completion_tokens=32768,
-                temperature=0.2,
+                temperature=0.2 if "gpt-5" not in model else 1.0,
                 model=model,
             )
             return response.choices[0].message.content
