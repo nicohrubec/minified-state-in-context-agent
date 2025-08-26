@@ -1,8 +1,12 @@
 import json
 from pathlib import Path
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from agent.minify import DEFINED_TRANSFORMATIONS
+
+sns.set_theme(style="whitegrid", context="talk")
 
 base_path_evals = Path(
     "/Users/nicolashrubec/dev/agent-state-management/data/eval_results"
@@ -81,3 +85,126 @@ for result in results_data:
 
 print("-" * 80)
 print()
+
+df_results = pd.DataFrame(results_data)
+
+# performance vs cost scatter plot
+plt.figure(figsize=(12, 8))
+scatter = plt.scatter(
+    df_results["total_cost"],
+    df_results["resolved_percentage"],
+    s=100,
+    alpha=0.7,
+    c=range(len(df_results)),
+    cmap="viridis",
+)
+
+for i, row in df_results.iterrows():
+    # labeling with some logic to make labels of close points not overlap
+    has_close_point = False
+    close_partner_index = None
+    for j, other_row in df_results.iterrows():
+        if i != j:
+            cost_diff = abs(row["total_cost"] - other_row["total_cost"])
+            perf_diff = abs(
+                row["resolved_percentage"] - other_row["resolved_percentage"]
+            )
+            if cost_diff < 0.0025 and perf_diff < 2.0:
+                has_close_point = True
+                close_partner_index = j
+                break
+
+    x_offset = 5
+    y_offset = 5
+    # if there is a close point select one to push aside
+    if has_close_point and i < close_partner_index:
+        y_offset = -10
+    elif has_close_point and i > close_partner_index:
+        x_offset = -10
+
+    plt.annotate(
+        row["transformation"],
+        (row["total_cost"], row["resolved_percentage"]),
+        xytext=(x_offset, y_offset),
+        textcoords="offset points",
+        fontsize=9,
+        alpha=0.8,
+    )
+
+plt.xlabel("Total Cost (USD)")
+plt.ylabel("Resolved Percentage (%)")
+plt.title("Performance vs Cost by Transformation")
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# resolved percentage bar chart
+plt.figure(figsize=(14, 8))
+bars = plt.bar(
+    df_results["transformation"],
+    df_results["resolved_percentage"],
+    color="skyblue",
+    edgecolor="navy",
+    alpha=0.8,
+)
+
+# add value labels on bars
+for bar, percentage in zip(bars, df_results["resolved_percentage"]):
+    plt.text(
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height() + 0.5,
+        f"{percentage:.1f}%",
+        ha="center",
+        va="bottom",
+        fontweight="bold",
+    )
+
+plt.xlabel("Transformation")
+plt.ylabel("Resolved Percentage (%)")
+plt.title("Resolved Percentage by Transformation")
+plt.xticks(rotation=45, ha="right")
+plt.ylim(0, max(df_results["resolved_percentage"]) * 1.15)
+plt.grid(True, alpha=0.3, axis="y")
+plt.tight_layout()
+plt.show()
+
+# stacked bar chart for cost breakdown
+plt.figure(figsize=(14, 8))
+
+# create stacked bars
+x_pos = range(len(df_results))
+input_costs = df_results["input_cost"]
+output_costs = df_results["output_cost"]
+
+bars1 = plt.bar(x_pos, input_costs, label="Input Cost", color="lightcoral", alpha=0.8)
+bars2 = plt.bar(
+    x_pos,
+    output_costs,
+    bottom=input_costs,
+    label="Output Cost",
+    color="lightblue",
+    alpha=0.8,
+)
+
+# add value labels on bars
+for i, (input_cost, output_cost, total_cost) in enumerate(
+    zip(input_costs, output_costs, df_results["total_cost"])
+):
+    plt.text(
+        i,
+        total_cost + 0.0001,
+        f"${total_cost:.4f}",
+        ha="center",
+        va="bottom",
+        fontweight="bold",
+        fontsize=9,
+    )
+
+plt.xlabel("Transformation")
+plt.ylabel("Cost (USD)")
+plt.title("Input vs Output Costs by Transformation")
+plt.xticks(x_pos, df_results["transformation"], rotation=45, ha="right")
+plt.legend()
+plt.grid(True, alpha=0.3, axis="y")
+plt.tight_layout()
+plt.show()
