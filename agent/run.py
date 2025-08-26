@@ -529,6 +529,7 @@ def run_agent(
     skip_repair,
     rank_encoding,
     transformations,
+    model="gpt-4.1",
     token_limit=100000,
 ):
     problem_files["files"] = [
@@ -547,7 +548,7 @@ def run_agent(
         problem, problem_files, rank_encoding
     )
     num_ranking_input_tokens = count_tokens(prompt)
-    response = call_gpt("", prompt)
+    response = call_gpt("", prompt, model)
     num_ranking_output_tokens = count_tokens(response)
 
     # 2. filter based on ranking
@@ -592,7 +593,7 @@ def run_agent(
 
     attempt = 1
     while attempt <= MAX_ATTEMPTS:
-        response = call_gpt(system_prompt, user_prompt)
+        response = call_gpt(system_prompt, user_prompt, model)
         num_repair_output_tokens = count_tokens(response)
 
         chain_of_thoughts = extract_cot_sections(response)
@@ -612,13 +613,13 @@ def run_agent(
     prediction = (
         {
             "instance_id": problem["instance_id"],
-            "model_name_or_path": "gpt-4.1",
+            "model_name_or_path": model,
             "model_patch": patch,
         }
         if patch
         else {
             "instance_id": problem["instance_id"],
-            "model_name_or_path": "gpt-4.1",
+            "model_name_or_path": model,
             "model_patch": "",
         }
     )

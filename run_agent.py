@@ -18,6 +18,7 @@ def parse_arguments():
     )
     parser.add_argument("--swe_bench_split", type=str, default="SWE-bench_Verified")
     parser.add_argument("--split", type=str, default="test_s0_01")
+    parser.add_argument("--model", type=str, default="gpt-4.1")
     parser.add_argument(
         "--dataset_directory",
         type=Path,
@@ -138,6 +139,7 @@ def main():
                 args.skip_repair,
                 args.rank_encoding,
                 transformations,
+                args.model,
             )
             metrics.append(instance_metrics)
         else:
@@ -149,6 +151,7 @@ def main():
                 args.skip_repair,
                 args.rank_encoding,
                 transformations,
+                args.model,
             )
 
             predictions.append(prediction)
@@ -160,9 +163,9 @@ def main():
                 num_failed_predictions += 1
 
     if args.skip_repair:
-        metrics_file_name = f"ranking_metrics_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
+        metrics_file_name = f"ranking_metrics_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
     else:
-        metrics_file_name = f"metrics_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
+        metrics_file_name = f"metrics_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
 
     metrics_df = pd.DataFrame(metrics)
     metrics_output_file = metrics_dir / metrics_file_name
@@ -174,19 +177,19 @@ def main():
     print(f"Number of failed predictions: {num_failed_predictions}")
     predictions_output_file = (
         predictions_dir
-        / f"predictions_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
+        / f"predictions_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(predictions, predictions_output_file)
 
     cots_output_file = (
         cots_dir
-        / f"cots_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
+        / f"cots_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(cots, cots_output_file)
 
     raw_responses_output_file = (
         responses_dir
-        / f"responses_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.json"
+        / f"responses_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.json"
     )
     with open(raw_responses_output_file, "w") as f:
         json.dump(raw_responses, f, indent=2)

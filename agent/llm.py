@@ -5,7 +5,7 @@ from openai import OpenAI
 client = OpenAI()
 
 
-def call_gpt(system_prompt, user_prompt):
+def call_gpt(system_prompt, user_prompt, model="gpt-4.1"):
     retry_delay = 60  # seconds
     attempt = 1
     max_attempts = 10
@@ -19,7 +19,7 @@ def call_gpt(system_prompt, user_prompt):
                 ],
                 max_completion_tokens=32768,
                 temperature=0.2,
-                model="gpt-4.1",
+                model=model,
             )
             return response.choices[0].message.content
 
