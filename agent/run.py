@@ -542,6 +542,28 @@ def run_agent(
 
     repo_dir = Path(repo_base_dir) / problem["repo"].split("/")[-1]
 
+    try:
+        # ensure we're in a clean state
+        subprocess.run(
+            ["git", "reset", "--hard", "HEAD"],
+            cwd=repo_dir,
+            capture_output=True,
+            check=True,
+        )
+
+        # checkout the target commit
+        subprocess.run(
+            ["git", "checkout", problem["base_commit"]],
+            cwd=repo_dir,
+            capture_output=True,
+            check=True,
+        )
+        print(
+            f"Successfully checked out commit {problem['base_commit']} for {problem['repo']}"
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to checkout commit {problem['base_commit']}: {e}")
+
     # preprocessing step
     # 1. file ranking
     prompt, replacements = build_file_ranking_prompt(
