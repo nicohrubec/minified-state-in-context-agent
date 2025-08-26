@@ -18,6 +18,7 @@ def call_gpt(system_prompt, user_prompt, model="gpt-4.1"):
                     {"role": "user", "content": user_prompt},
                 ],
                 max_completion_tokens=32768,
+                reasoning_effort="medium" if "gpt-5" in model else None,
                 temperature=0.2 if "gpt-5" not in model else 1.0,
                 model=model,
             )
