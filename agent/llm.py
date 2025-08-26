@@ -12,18 +12,28 @@ def call_gpt(system_prompt, user_prompt, model="gpt-4.1"):
 
     while True:
         try:
-            response = client.chat.completions.create(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                max_completion_tokens=32768,
-                reasoning_effort="medium" if "gpt-5" in model else None,
-                temperature=0.2 if "gpt-5" not in model else 1.0,
-                model=model,
-            )
+            if "gpt-5" in model:
+                response = client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    max_completion_tokens=32768,
+                    reasoning_effort="medium",
+                    temperature=1.0,
+                    model=model,
+                )
+            else:
+                response = client.chat.completions.create(
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    max_completion_tokens=32768,
+                    temperature=0.2,
+                    model=model,
+                )
             return response.choices[0].message.content
-
         except Exception as e:
             if attempt > max_attempts:
                 raise e

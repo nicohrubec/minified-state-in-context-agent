@@ -47,16 +47,22 @@ temp00_percentage = (temp00_resolved / submitted_instances) * 100
 
 
 print("Temperature Ablation Results:")
-print(f"Temperature 0.8: {temp08_resolved}/{submitted_instances} = {temp08_percentage:.2f}% resolved")
-print(f"Temperature 0.2: {temp02_resolved}/{submitted_instances} = {temp02_percentage:.2f}% resolved")
-print(f"Temperature 0.0: {temp00_resolved}/{submitted_instances} = {temp00_percentage:.2f}% resolved")
+print(
+    f"Temperature 0.8: {temp08_resolved}/{submitted_instances} = {temp08_percentage:.2f}% resolved"
+)
+print(
+    f"Temperature 0.2: {temp02_resolved}/{submitted_instances} = {temp02_percentage:.2f}% resolved"
+)
+print(
+    f"Temperature 0.0: {temp00_resolved}/{submitted_instances} = {temp00_percentage:.2f}% resolved"
+)
 
 # data for resolved instances
 temperature_data = {
     "Temperature": ["0.0", "0.2", "0.8"],
     "Resolved_Percentage": [temp00_percentage, temp02_percentage, temp08_percentage],
     "Resolved_Count": [temp00_resolved, temp02_resolved, temp08_resolved],
-    "Submitted_Count": [submitted_instances, submitted_instances, submitted_instances]
+    "Submitted_Count": [submitted_instances, submitted_instances, submitted_instances],
 }
 
 df = pd.DataFrame(temperature_data)
@@ -64,16 +70,20 @@ df = pd.DataFrame(temperature_data)
 # basic bar plot for resolved instances
 plt.figure(figsize=(10, 6))
 ax = sns.barplot(
-    data=df,
-    x="Temperature",
-    y="Resolved_Percentage",
-    edgecolor="w",
-    color="skyblue"
+    data=df, x="Temperature", y="Resolved_Percentage", edgecolor="w", color="skyblue"
 )
 
-for i, (percentage, count, submitted) in enumerate(zip(df["Resolved_Percentage"], df["Resolved_Count"], df["Submitted_Count"])):
-    ax.text(i, percentage + 0.5, f"{percentage:.1f}%", 
-            ha='center', va='bottom', fontweight='bold')
+for i, (percentage, count, submitted) in enumerate(
+    zip(df["Resolved_Percentage"], df["Resolved_Count"], df["Submitted_Count"])
+):
+    ax.text(
+        i,
+        percentage + 0.5,
+        f"{percentage:.1f}%",
+        ha="center",
+        va="bottom",
+        fontweight="bold",
+    )
 
 ax.set_xlabel("Temperature")
 ax.set_ylabel("Percentage of Resolved Instances (%)")
@@ -89,7 +99,10 @@ plt.figure(figsize=(12, 8))
 
 stacked_data = {
     "Temperature": ["0.0", "0.2", "0.8"] * 4,
-    "Category": ["Resolved"] * 3 + ["Unresolved"] * 3 + ["Errors"] * 3 + ["Empty Patches"] * 3,
+    "Category": ["Resolved"] * 3
+    + ["Unresolved"] * 3
+    + ["Errors"] * 3
+    + ["Empty Patches"] * 3,
     "Percentage": [
         (temp00_resolved / submitted_instances) * 100,
         (temp02_resolved / submitted_instances) * 100,
@@ -102,14 +115,22 @@ stacked_data = {
         (temp08_errors / submitted_instances) * 100,
         (temp00_empty / submitted_instances) * 100,
         (temp02_empty / submitted_instances) * 100,
-        (temp08_empty / submitted_instances) * 100
+        (temp08_empty / submitted_instances) * 100,
     ],
     "Count": [
-        temp00_resolved, temp02_resolved, temp08_resolved,
-        temp00_unresolved, temp02_unresolved, temp08_unresolved,
-        temp00_errors, temp02_errors, temp08_errors,
-        temp00_empty, temp02_empty, temp08_empty
-    ]
+        temp00_resolved,
+        temp02_resolved,
+        temp08_resolved,
+        temp00_unresolved,
+        temp02_unresolved,
+        temp08_unresolved,
+        temp00_errors,
+        temp02_errors,
+        temp08_errors,
+        temp00_empty,
+        temp02_empty,
+        temp08_empty,
+    ],
 }
 
 stacked_df = pd.DataFrame(stacked_data)
@@ -120,13 +141,13 @@ ax2 = sns.barplot(
     y="Percentage",
     hue="Category",
     palette=["#2ecc71", "#e74c3c", "#f39c12", "#9b59b6"],  # Green, Red, Orange, Purple
-    edgecolor="w"
+    edgecolor="w",
 )
 
 ax2.set_xlabel("Temperature")
 ax2.set_ylabel("Percentage of Instances (%)")
 ax2.set_title("Temperature Ablation: Breakdown of Instance Outcomes")
-ax2.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc='upper left')
+ax2.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
 ax2.set_ylim(0, 100)
 
 sns.despine()
@@ -136,6 +157,12 @@ plt.show()
 print("\nDetailed Breakdown:")
 print("Temperature | Resolved | Unresolved | Errors | Empty Patches")
 print("-" * 60)
-print(f"0.0         | {temp00_resolved:8d} | {temp00_unresolved:10d} | {temp00_errors:6d} | {temp00_empty:13d}")
-print(f"0.2         | {temp02_resolved:8d} | {temp02_unresolved:10d} | {temp02_errors:6d} | {temp02_empty:13d}")
-print(f"0.8         | {temp08_resolved:8d} | {temp08_unresolved:10d} | {temp08_errors:6d} | {temp08_empty:13d}")
+print(
+    f"0.0         | {temp00_resolved:8d} | {temp00_unresolved:10d} | {temp00_errors:6d} | {temp00_empty:13d}"
+)
+print(
+    f"0.2         | {temp02_resolved:8d} | {temp02_unresolved:10d} | {temp02_errors:6d} | {temp02_empty:13d}"
+)
+print(
+    f"0.8         | {temp08_resolved:8d} | {temp08_unresolved:10d} | {temp08_errors:6d} | {temp08_empty:13d}"
+)
