@@ -208,3 +208,85 @@ plt.legend()
 plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
 plt.show()
+
+# detailed performance breakdown for each transformation
+plt.figure(figsize=(16, 10))
+
+stacked_data = []
+for eval_transform in eval_transform_names:
+    performance = performance_data[eval_transform]
+    submitted_instances = performance["submitted_instances"]
+
+    resolved = performance["resolved_instances"]
+    unresolved = performance["unresolved_instances"]
+    errors = performance["error_instances"]
+    empty_patches = performance["empty_patch_instances"]
+
+    stacked_data.extend(
+        [
+            {
+                "Transformation": eval_transform,
+                "Category": "Resolved",
+                "Percentage": (resolved / submitted_instances) * 100,
+                "Count": resolved,
+            },
+            {
+                "Transformation": eval_transform,
+                "Category": "Unresolved",
+                "Percentage": (unresolved / submitted_instances) * 100,
+                "Count": unresolved,
+            },
+            {
+                "Transformation": eval_transform,
+                "Category": "Errors",
+                "Percentage": (errors / submitted_instances) * 100,
+                "Count": errors,
+            },
+            {
+                "Transformation": eval_transform,
+                "Category": "Empty Patches",
+                "Percentage": (empty_patches / submitted_instances) * 100,
+                "Count": empty_patches,
+            },
+        ]
+    )
+
+stacked_df = pd.DataFrame(stacked_data)
+
+ax = sns.barplot(
+    data=stacked_df,
+    x="Transformation",
+    y="Percentage",
+    hue="Category",
+    palette=["#2ecc71", "#e74c3c", "#f39c12", "#9b59b6"],  # Green, Red, Orange, Purple
+    edgecolor="w",
+)
+
+ax.set_xlabel("Transformation")
+ax.set_ylabel("Percentage of Instances (%)")
+ax.set_title("Breakdown of Instance Outcomes by Transformation")
+ax.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
+ax.set_ylim(0, 100)
+plt.xticks(rotation=45, ha="right")
+
+sns.despine()
+plt.tight_layout()
+plt.show()
+
+print("\nDetailed Performance Breakdown:")
+print(
+    f"{'Transformation':<20} {'Resolved':<10} {'Unresolved':<12} {'Errors':<8} {'Empty Patches':<15}"
+)
+print("-" * 70)
+for eval_transform in eval_transform_names:
+    performance = performance_data[eval_transform]
+    submitted_instances = performance["submitted_instances"]
+
+    resolved = performance["resolved_instances"]
+    unresolved = performance["unresolved_instances"]
+    errors = performance["error_instances"]
+    empty_patches = performance["empty_patch_instances"]
+
+    print(
+        f"{eval_transform:<20} {resolved:<10} {unresolved:<12} {errors:<8} {empty_patches:<15}"
+    )
