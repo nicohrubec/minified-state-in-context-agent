@@ -175,8 +175,6 @@ def main():
             if prediction["model_patch"] == "":
                 num_failed_predictions += 1
 
-        break
-
     if args.skip_repair:
         metrics_file_name = f"ranking_metrics_{model_suffix}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
     else:
