@@ -531,6 +531,7 @@ def run_agent(
     transformations,
     model="gpt-4.1",
     token_limit=100000,
+    temperature=0.8,
 ):
     problem_files["files"] = [
         file
@@ -570,7 +571,7 @@ def run_agent(
         problem, problem_files, rank_encoding
     )
     num_ranking_input_tokens = count_tokens(prompt)
-    response = call_gpt("", prompt, model)
+    response = call_gpt("", prompt, model, temperature=temperature)
     num_ranking_output_tokens = count_tokens(response)
 
     # 2. filter based on ranking
@@ -615,7 +616,7 @@ def run_agent(
 
     attempt = 1
     while attempt <= MAX_ATTEMPTS:
-        response = call_gpt(system_prompt, user_prompt, model)
+        response = call_gpt(system_prompt, user_prompt, model, temperature=temperature)
         num_repair_output_tokens = count_tokens(response)
 
         chain_of_thoughts = extract_cot_sections(response)

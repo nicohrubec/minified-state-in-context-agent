@@ -45,6 +45,12 @@ def parse_arguments():
         default=[],
         choices=DEFINED_TRANSFORMATIONS,
     )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.8,
+        help="Temperature parameter for LLM calls (only used for non-gpt-5 models)",
+    )
     return parser.parse_args()
 
 
@@ -126,6 +132,11 @@ def main():
     transformations = args.transformations
     transformations_suffix = "_".join(transformations)
 
+    if "gpt-5" in args.model:
+        model_suffix = args.model
+    else:
+        model_suffix = f"{args.model}_temp{args.temperature}"
+
     num_failed_predictions = 0
     for i, (problem, files) in enumerate(zip(problems, problem_files), 1):
         print(f"Processing problem {i}/{len(problems)}: {problem['instance_id']}")
@@ -140,6 +151,7 @@ def main():
                 args.rank_encoding,
                 transformations,
                 args.model,
+                temperature=args.temperature,
             )
             metrics.append(instance_metrics)
         else:
@@ -152,6 +164,7 @@ def main():
                 args.rank_encoding,
                 transformations,
                 args.model,
+                temperature=args.temperature,
             )
 
             predictions.append(prediction)
@@ -162,10 +175,12 @@ def main():
             if prediction["model_patch"] == "":
                 num_failed_predictions += 1
 
+        break
+
     if args.skip_repair:
-        metrics_file_name = f"ranking_metrics_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
+        metrics_file_name = f"ranking_metrics_{model_suffix}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
     else:
-        metrics_file_name = f"metrics_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
+        metrics_file_name = f"metrics_{model_suffix}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.csv"
 
     metrics_df = pd.DataFrame(metrics)
     metrics_output_file = metrics_dir / metrics_file_name
@@ -177,19 +192,19 @@ def main():
     print(f"Number of failed predictions: {num_failed_predictions}")
     predictions_output_file = (
         predictions_dir
-        / f"predictions_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
+        / f"predictions_{model_suffix}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(predictions, predictions_output_file)
 
     cots_output_file = (
         cots_dir
-        / f"cots_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
+        / f"cots_{model_suffix}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.jsonl"
     )
     write_jsonl(cots, cots_output_file)
 
     raw_responses_output_file = (
         responses_dir
-        / f"responses_{args.model}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.json"
+        / f"responses_{model_suffix}_{args.swe_bench_split}_{args.split}_{args.rank_encoding}_{transformations_suffix}.json"
     )
     with open(raw_responses_output_file, "w") as f:
         json.dump(raw_responses, f, indent=2)
