@@ -31,7 +31,7 @@ for eval_transform, metric_transform in zip(
 
     metric_path = (
         base_path_metrics
-        / f"metrics_gpt-4.1_SWE-bench_Verified_test_s0_2_trie_{metric_transform}.csv"
+        / f"metrics_gpt-4.1_temp0.8_SWE-bench_Verified_test_s0_2_trie_{metric_transform}.csv"
     )
     token_usage_data[metric_transform] = pd.read_csv(metric_path)
 
