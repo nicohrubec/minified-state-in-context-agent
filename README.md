@@ -17,8 +17,7 @@ pip install -r requirements.txt
 
 3. Set environment variables:
 ```bash
-export AZURE_OPENAI_API_KEY="your_azure_openai_api_key"
-export AZURE_OPENAI_ENDPOINT="your_azure_openai_endpoint"
+export OPENAI_API_KEY="your_openai_api_key"
 export HF_TOKEN="your_huggingface_token"  # Optional: for dataset access
 ```
 
