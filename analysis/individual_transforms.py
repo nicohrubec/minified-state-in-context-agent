@@ -212,7 +212,13 @@ plt.show()
 # detailed performance breakdown for each transformation
 plt.figure(figsize=(16, 10))
 
-stacked_data = []
+# Prepare data for stacked bar chart
+transformations = []
+resolved_percentages = []
+unresolved_percentages = []
+error_percentages = []
+empty_patch_percentages = []
+
 for eval_transform in eval_transform_names:
     performance = performance_data[eval_transform]
     submitted_instances = performance["submitted_instances"]
@@ -222,54 +228,55 @@ for eval_transform in eval_transform_names:
     errors = performance["error_instances"]
     empty_patches = performance["empty_patch_instances"]
 
-    stacked_data.extend(
-        [
-            {
-                "Transformation": eval_transform,
-                "Category": "Resolved",
-                "Percentage": (resolved / submitted_instances) * 100,
-                "Count": resolved,
-            },
-            {
-                "Transformation": eval_transform,
-                "Category": "Unresolved",
-                "Percentage": (unresolved / submitted_instances) * 100,
-                "Count": unresolved,
-            },
-            {
-                "Transformation": eval_transform,
-                "Category": "Errors",
-                "Percentage": (errors / submitted_instances) * 100,
-                "Count": errors,
-            },
-            {
-                "Transformation": eval_transform,
-                "Category": "Empty Patches",
-                "Percentage": (empty_patches / submitted_instances) * 100,
-                "Count": empty_patches,
-            },
-        ]
-    )
+    transformations.append(eval_transform)
+    resolved_percentages.append((resolved / submitted_instances) * 100)
+    unresolved_percentages.append((unresolved / submitted_instances) * 100)
+    error_percentages.append((errors / submitted_instances) * 100)
+    empty_patch_percentages.append((empty_patches / submitted_instances) * 100)
 
-stacked_df = pd.DataFrame(stacked_data)
+# Create stacked bar chart
+x_pos = range(len(transformations))
 
-ax = sns.barplot(
-    data=stacked_df,
-    x="Transformation",
-    y="Percentage",
-    hue="Category",
-    palette=["#2ecc71", "#e74c3c", "#f39c12", "#9b59b6"],  # Green, Red, Orange, Purple
-    edgecolor="w",
+bars1 = plt.bar(
+    x_pos, resolved_percentages, label="Resolved", color="#2ecc71", alpha=0.8
+)
+bars2 = plt.bar(
+    x_pos,
+    unresolved_percentages,
+    bottom=resolved_percentages,
+    label="Unresolved",
+    color="#e74c3c",
+    alpha=0.8,
+)
+bars3 = plt.bar(
+    x_pos,
+    error_percentages,
+    bottom=[r + u for r, u in zip(resolved_percentages, unresolved_percentages)],
+    label="Errors",
+    color="#f39c12",
+    alpha=0.8,
+)
+bars4 = plt.bar(
+    x_pos,
+    empty_patch_percentages,
+    bottom=[
+        r + u + e
+        for r, u, e in zip(
+            resolved_percentages, unresolved_percentages, error_percentages
+        )
+    ],
+    label="Empty Patches",
+    color="#9b59b6",
+    alpha=0.8,
 )
 
-ax.set_xlabel("Transformation")
-ax.set_ylabel("Percentage of Instances (%)")
-ax.set_title("Breakdown of Instance Outcomes by Transformation")
-ax.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
-ax.set_ylim(0, 100)
-plt.xticks(rotation=45, ha="right")
-
-sns.despine()
+plt.xlabel("Transformation")
+plt.ylabel("Percentage of Instances (%)")
+plt.title("Breakdown of Instance Outcomes by Transformation")
+plt.xticks(x_pos, transformations, rotation=45, ha="right")
+plt.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
+plt.ylim(0, 100)
+plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
 plt.show()
 
