@@ -242,6 +242,11 @@ def build_repair_prompt(problem, problem_files, hash_to_content, transformations
                 for shortened, original in mapping.items():
                     source_map_context += f"- `{shortened}` -> `{original}`\n"
 
+        source_map_context += (
+            "Use the original names when you output the search and replace blocks.\n"
+        )
+        source_map_context += "For instance if the source maps contain an entry '- a -> b', then a is the shortened name that you will find in the code and b is the original. In this use b instead of a when you output the search and replace block."
+
     system_prompt = "You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description."
     user_prompt = f"""# REPOSITORY STRUCTURE:
 --------------------
