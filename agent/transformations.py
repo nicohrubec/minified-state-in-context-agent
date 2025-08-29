@@ -216,7 +216,11 @@ def shorten(source_files: List[str], find_obfunc, replace_obfunc):
             obfuscatables = obfuscate.find_obfuscatables(
                 tokenized_body, find_obfunc, ignore_length=False
             )
-            obfuscatables = [obfuscatable for obfuscatable in obfuscatables if count_tokens(obfuscatable) > 1]
+            obfuscatables = [
+                obfuscatable
+                for obfuscatable in obfuscatables
+                if count_tokens(obfuscatable) > 1
+            ]
 
             for obfuscatable in obfuscatables:
                 obfuscate.replace_obfuscatables(
@@ -271,7 +275,10 @@ def shorten_with_source_map(
                     if token[0] == tokenize.NAME and token[1] == obfuscatable:
                         occurrence_count += 1
 
-                if occurrence_count > 1 and count_tokens(obfuscatable) > 2:
+                # check if what we save in tokens is justified by adding the overhead of the source map entry
+                if (occurrence_count * (count_tokens(obfuscatable) - 1)) > (
+                    3 + count_tokens(obfuscatable)
+                ):
                     shortened_name = next(safe_name_generator)
 
                     for i, token in enumerate(tokenized_body):
