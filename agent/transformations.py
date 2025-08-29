@@ -216,6 +216,7 @@ def shorten(source_files: List[str], find_obfunc, replace_obfunc):
             obfuscatables = obfuscate.find_obfuscatables(
                 tokenized_body, find_obfunc, ignore_length=False
             )
+            obfuscatables = [obfuscatable for obfuscatable in obfuscatables if count_tokens(obfuscatable) > 1]
 
             for obfuscatable in obfuscatables:
                 obfuscate.replace_obfuscatables(
