@@ -13,6 +13,9 @@ from agent.minify import (
     SHORT_VARS_TRANSFORMATION_CONST,
     SHORT_FUNCS_TRANSFORMATION_CONST,
     SHORT_CLASSES_TRANSFORMATION_CONST,
+    SHORT_VARS_MAP_TRANSFORMATION_CONST,
+    SHORT_FUNCS_MAP_TRANSFORMATION_CONST,
+    SHORT_CLASSES_MAP_TRANSFORMATION_CONST,
 )
 
 MAX_ATTEMPTS = 5
@@ -401,6 +404,21 @@ def extract_final_patches_as_diff(response_text, repo_dir, source_maps=None):
         print("Reversing class shortening transformations...")
         blocks = reverse_shortening_in_blocks(
             blocks, source_maps[SHORT_CLASSES_TRANSFORMATION_CONST]
+        )
+    if source_maps and SHORT_VARS_MAP_TRANSFORMATION_CONST in source_maps:
+        print("Reversing variable shortening map transformations...")
+        blocks = reverse_shortening_in_blocks(
+            blocks, source_maps[SHORT_VARS_MAP_TRANSFORMATION_CONST]
+        )
+    if source_maps and SHORT_FUNCS_MAP_TRANSFORMATION_CONST in source_maps:
+        print("Reversing function shortening map transformations...")
+        blocks = reverse_shortening_in_blocks(
+            blocks, source_maps[SHORT_FUNCS_MAP_TRANSFORMATION_CONST]
+        )
+    if source_maps and SHORT_CLASSES_MAP_TRANSFORMATION_CONST in source_maps:
+        print("Reversing class shortening map transformations...")
+        blocks = reverse_shortening_in_blocks(
+            blocks, source_maps[SHORT_CLASSES_MAP_TRANSFORMATION_CONST]
         )
 
     originals = {}
