@@ -133,41 +133,23 @@ def _tokenize_with_positions(code: str) -> List[tokenize.TokenInfo]:
 
 def _likely_docstring_positions(tokens: List[tokenize.TokenInfo]) -> set:
     """
-    Heuristic: a STRING token is considered a docstring iff it is the first
-    significant token after INDENT or NEWLINE at module/def/class scope.
+    Heuristic: a STRING token is considered a docstring using pyminifier logic:
+    - If previous token is INDENT, it's definitely a docstring
+    - If previous token is NL and next token is NEWLINE, it's a module-level docstring
     We avoid AST to stay resilient to malformed code.
     """
     doc_indices = set()
-    prev_sig_idx = None
+    prev_tok_type = None
     for i, t in enumerate(tokens):
-        if t.type in IGNORABLE_TOKEN_TYPES:
-            continue
         if t.type == tokenize.STRING:
-            # find previous significant token
-            prev_sig = tokens[prev_sig_idx] if prev_sig_idx is not None else None
-            # find next significant token
-            j = i + 1
-            next_sig = None
-            while j < len(tokens) and tokens[j].type in IGNORABLE_TOKEN_TYPES:
-                j += 1
-            if j < len(tokens):
-                next_sig = tokens[j]
-            # Conditions:
-            #  - prev significant is None or NEWLINE or INDENT or OP(':')
-            #  - next significant is NEWLINE/DEDENT or end or OP
-            prev_ok = (
-                prev_sig is None
-                or prev_sig.type in (tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT)
-                or (prev_sig.type == tokenize.OP and prev_sig.string == ":")
-            )
-            next_ok = (
-                next_sig is None
-                or next_sig.type in (tokenize.NEWLINE, tokenize.DEDENT)
-                or (next_sig.type == tokenize.OP and next_sig.string in ")']}")
-            )
-            if prev_ok and next_ok:
+            if prev_tok_type == tokenize.INDENT:
+                # Definitely a docstring
                 doc_indices.add(i)
-        prev_sig_idx = i
+            elif prev_tok_type == tokenize.NL:
+                # This captures whole-module docstrings:
+                if i + 1 < len(tokens) and tokens[i + 1].type == tokenize.NEWLINE:
+                    doc_indices.add(i)
+        prev_tok_type = t.type
     return doc_indices
 
 
