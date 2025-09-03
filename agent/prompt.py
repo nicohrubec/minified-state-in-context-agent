@@ -247,6 +247,10 @@ def build_repair_prompt(problem, problem_files, hash_to_content, transformations
         )
         source_map_context += "For instance if the source maps contain an entry '- a -> b', then a is the shortened name that you will find in the code and b is the original. In this use b instead of a when you output the search and replace block."
 
+    dedent_context = ""
+    if "dedent" in transformations:
+        dedent_context = "- Always output the SEARCH and REPLACE block with a 4 spaces indentation style, even if you receive source files that use less indentation."
+
     system_prompt = "You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description."
     user_prompt = f"""# REPOSITORY STRUCTURE:
 --------------------
@@ -324,6 +328,7 @@ Requirements :
 - Keep search regions minimal. Only search for lines that need replacement. 
     For instance, prefer multiple smaller edits over one large edit that regenerates a full function.
 - Do not include any evaluation or commentary beyond the four requested steps.
+{dedent_context}
     
 Your final output must include these sections in the following order :
 1. Chain - of - Thought for Localization
