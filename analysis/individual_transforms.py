@@ -140,6 +140,7 @@ plt.show()
 
 # resolved percentage bar chart
 plt.figure(figsize=(14, 8))
+df_results = df_results.sort_values("resolved_percentage", ascending=False)
 bars = plt.bar(
     df_results["transformation"],
     df_results["resolved_percentage"],
@@ -170,6 +171,7 @@ plt.show()
 
 # stacked bar chart for cost breakdown
 plt.figure(figsize=(14, 8))
+df_results = df_results.sort_values("total_cost", ascending=False)
 
 # create stacked bars
 x_pos = range(len(df_results))
@@ -213,11 +215,7 @@ plt.show()
 plt.figure(figsize=(16, 10))
 
 # Prepare data for stacked bar chart
-transformations = []
-resolved_percentages = []
-unresolved_percentages = []
-error_percentages = []
-empty_patch_percentages = []
+breakdown_data = []
 
 for eval_transform in eval_transform_names:
     performance = performance_data[eval_transform]
@@ -228,11 +226,29 @@ for eval_transform in eval_transform_names:
     errors = performance["error_instances"]
     empty_patches = performance["empty_patch_instances"]
 
-    transformations.append(eval_transform)
-    resolved_percentages.append((resolved / submitted_instances) * 100)
-    unresolved_percentages.append((unresolved / submitted_instances) * 100)
-    error_percentages.append((errors / submitted_instances) * 100)
-    empty_patch_percentages.append((empty_patches / submitted_instances) * 100)
+    resolved_percentage = (resolved / submitted_instances) * 100
+    unresolved_percentage = (unresolved / submitted_instances) * 100
+    error_percentage = (errors / submitted_instances) * 100
+    empty_patch_percentage = (empty_patches / submitted_instances) * 100
+
+    breakdown_data.append(
+        {
+            "transformation": eval_transform,
+            "resolved_percentage": resolved_percentage,
+            "unresolved_percentage": unresolved_percentage,
+            "error_percentage": error_percentage,
+            "empty_patch_percentage": empty_patch_percentage,
+        }
+    )
+
+breakdown_data.sort(key=lambda x: x["resolved_percentage"], reverse=True)
+
+# Extract sorted data
+transformations = [item["transformation"] for item in breakdown_data]
+resolved_percentages = [item["resolved_percentage"] for item in breakdown_data]
+unresolved_percentages = [item["unresolved_percentage"] for item in breakdown_data]
+error_percentages = [item["error_percentage"] for item in breakdown_data]
+empty_patch_percentages = [item["empty_patch_percentage"] for item in breakdown_data]
 
 # Create stacked bar chart
 x_pos = range(len(transformations))
@@ -285,7 +301,8 @@ print(
     f"{'Transformation':<20} {'Resolved':<10} {'Unresolved':<12} {'Errors':<8} {'Empty Patches':<15}"
 )
 print("-" * 70)
-for eval_transform in eval_transform_names:
+for item in breakdown_data:
+    eval_transform = item["transformation"]
     performance = performance_data[eval_transform]
     submitted_instances = performance["submitted_instances"]
 
