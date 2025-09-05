@@ -21,6 +21,18 @@ TRANSFORMATION_COMBINATIONS = OrderedDict(
                 ],
             },
         ),
+        (
+            "+ Remove Comments",
+            {
+                "eval_name": "obscure-remove-comments",
+                "transformations": [
+                    "short_vars_map",
+                    "short_funcs_map",
+                    "short_classes",
+                    "remove_comments",
+                ],
+            },
+        ),
     ]
 )
 
