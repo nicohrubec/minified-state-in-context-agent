@@ -631,8 +631,6 @@ def run_agent(
         problem, problem_files, hash_to_content, transformations
     )
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
-    print(num_repair_input_tokens)
-    print(user_prompt)
 
     attempt = 1
     while attempt <= MAX_ATTEMPTS:
