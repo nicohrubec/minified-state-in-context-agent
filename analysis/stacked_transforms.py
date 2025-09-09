@@ -33,6 +33,34 @@ TRANSFORMATION_COMBINATIONS = OrderedDict(
                 ],
             },
         ),
+        (
+            "+ Remove Docstrings",
+            {
+                "eval_name": "obscure-remove-comments-docstrings",
+                "transformations": [
+                    "short_vars_map",
+                    "short_funcs_map",
+                    "short_classes",
+                    "remove_comments",
+                    "remove_docstrings",
+                ],
+            },
+        ),
+        (
+            "+ Line/Operator Whitespace Removal",
+            {
+                "eval_name": "obscure-remove-comments-docstrings-blank-lines-reduce-operators",
+                "transformations": [
+                    "short_vars_map",
+                    "short_funcs_map",
+                    "short_classes",
+                    "remove_comments",
+                    "remove_docstrings",
+                    "remove_blank_lines",
+                    "reduce_operators",
+                ],
+            },
+        ),
     ]
 )
 
@@ -128,25 +156,24 @@ plt.xlabel("Total Cost (USD)")
 plt.ylabel("Number of Resolved Instances")
 plt.title("Resolved Instances vs Cost for Stacked Transformations")
 plt.gca().invert_xaxis()
-plt.gca().yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{int(x)}"))
+plt.gca().yaxis.set_major_locator(plt.MaxNLocator(integer=True))
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.show()
 
-# summary table
 print("Summary Table:")
-print("=" * 120)
+print("=" * 130)
 print(
-    f"{'Combination Name':<30} {'Resolved':<10} {'Input Cost ($)':<15} {'Output Cost ($)':<15} {'Total Cost ($)':<15} {'Transformations':<30}"
+    f"{'Combination Name':<40} {'Resolved':<10} {'Input Cost ($)':<15} {'Output Cost ($)':<15} {'Total Cost ($)':<15} {'Transformations':<30}"
 )
-print("-" * 120)
+print("-" * 130)
 
 for result in results_data:
     transformations_str = (
         ", ".join(result["transformations"]) if result["transformations"] else "None"
     )
     print(
-        f"{result['combination_key']:<30} {result['resolved_count']:<10} {result['input_cost']:<15.4f} {result['output_cost']:<15.4f} {result['total_cost']:<15.4f} {transformations_str:<30}"
+        f"{result['combination_key']:<40} {result['resolved_count']:<10} {result['input_cost']:<15.4f} {result['output_cost']:<15.4f} {result['total_cost']:<15.4f} {transformations_str:<30}"
     )
 
-print("-" * 120)
+print("-" * 130)
