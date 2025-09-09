@@ -74,16 +74,16 @@ for eval_transform, metric_transform in zip(
 print("Individual Transformations Analysis")
 print("=" * 80)
 print(
-    f"{'Transformation':<20} {'Resolved %':<12} {'Resolved':<10} {'Input Tokens':<15} {'Output Tokens':<15} {'Total Cost ($)':<15}"
+    f"{'Transformation':<35} {'Resolved %':<12} {'Resolved':<10} {'Input Tokens':<15} {'Output Tokens':<15} {'Total Cost ($)':<15}"
 )
-print("-" * 80)
+print("-" * 95)
 
 for result in results_data:
     print(
-        f"{result['transformation']:<20} {result['resolved_percentage']:<12.2f} {result['resolved_count']:<10} {result['avg_input_tokens']:<15.0f} {result['avg_output_tokens']:<15.0f} {result['total_cost']:<15.4f}"
+        f"{result['transformation']:<35} {result['resolved_percentage']:<12.2f} {result['resolved_count']:<10} {result['avg_input_tokens']:<15.0f} {result['avg_output_tokens']:<15.0f} {result['total_cost']:<15.4f}"
     )
 
-print("-" * 80)
+print("-" * 95)
 print()
 
 df_results = pd.DataFrame(results_data)
@@ -298,9 +298,9 @@ plt.show()
 
 print("\nDetailed Performance Breakdown:")
 print(
-    f"{'Transformation':<20} {'Resolved':<10} {'Unresolved':<12} {'Errors':<8} {'Empty Patches':<15}"
+    f"{'Transformation':<35} {'Resolved':<10} {'Unresolved':<12} {'Errors':<8} {'Empty Patches':<15}"
 )
-print("-" * 70)
+print("-" * 85)
 for item in breakdown_data:
     eval_transform = item["transformation"]
     performance = performance_data[eval_transform]
@@ -312,5 +312,5 @@ for item in breakdown_data:
     empty_patches = performance["empty_patch_instances"]
 
     print(
-        f"{eval_transform:<20} {resolved:<10} {unresolved:<12} {errors:<8} {empty_patches:<15}"
+        f"{eval_transform:<35} {resolved:<10} {unresolved:<12} {errors:<8} {empty_patches:<15}"
     )
