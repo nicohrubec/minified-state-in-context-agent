@@ -16,6 +16,9 @@ from agent.minify import (
     SHORT_VARS_MAP_TRANSFORMATION_CONST,
     SHORT_FUNCS_MAP_TRANSFORMATION_CONST,
     SHORT_CLASSES_MAP_TRANSFORMATION_CONST,
+    SHORT_VARS_MAP_WITH_MAP_TRANSFORMATION_CONST,
+    SHORT_FUNCS_MAP_WITH_MAP_TRANSFORMATION_CONST,
+    SHORT_CLASSES_MAP_WITH_MAP_TRANSFORMATION_CONST,
 )
 
 MAX_ATTEMPTS = 5
@@ -628,6 +631,8 @@ def run_agent(
         problem, problem_files, hash_to_content, transformations
     )
     num_repair_input_tokens = count_tokens(system_prompt + user_prompt)
+    print(num_repair_input_tokens)
+    print(user_prompt)
 
     attempt = 1
     while attempt <= MAX_ATTEMPTS:
