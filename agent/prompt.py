@@ -1,4 +1,10 @@
-from agent.minify import minify
+from agent.minify import (
+    minify,
+    SHORT_VARS_MAP_WITH_MAP_TRANSFORMATION_CONST,
+    SHORT_FUNCS_MAP_WITH_MAP_TRANSFORMATION_CONST,
+    SHORT_CLASSES_MAP_WITH_MAP_TRANSFORMATION_CONST,
+    DEDENT_TRANSFORMATION_CONST,
+)
 from shared.tokens import count_tokens
 
 
@@ -222,9 +228,9 @@ def build_repair_prompt(problem, problem_files, hash_to_content, transformations
 
     # Check if any source map transformations were applied
     source_map_transformations = [
-        "shorten_vars_map",
-        "shorten_funcs_map",
-        "shorten_classes_map",
+        SHORT_VARS_MAP_WITH_MAP_TRANSFORMATION_CONST,
+        SHORT_FUNCS_MAP_WITH_MAP_TRANSFORMATION_CONST,
+        SHORT_CLASSES_MAP_WITH_MAP_TRANSFORMATION_CONST,
     ]
     has_source_maps = any(
         transformation in source_maps for transformation in source_map_transformations
@@ -240,7 +246,7 @@ def build_repair_prompt(problem, problem_files, hash_to_content, transformations
             if transformation in source_map_transformations and mapping:
                 source_map_context += f"\n## {transformation}:\n"
                 for shortened, original in mapping.items():
-                    source_map_context += f"- `{shortened}` -> `{original}`\n"
+                    source_map_context += f"- {shortened} -> {original}\n"
 
         source_map_context += (
             "Use the original names when you output the search and replace blocks.\n"
@@ -248,7 +254,7 @@ def build_repair_prompt(problem, problem_files, hash_to_content, transformations
         source_map_context += "For instance if the source maps contain an entry '- a -> b', then a is the shortened name that you will find in the code and b is the original. In this use b instead of a when you output the search and replace block."
 
     dedent_context = ""
-    if "dedent" in transformations:
+    if DEDENT_TRANSFORMATION_CONST in transformations:
         dedent_context = "- Always output the SEARCH and REPLACE block with a 4 spaces indentation style, even if you receive source files that use less indentation."
 
     system_prompt = "You are a senior software engineer tasked with analyzing and resolving a repository issue. You have been provided with the complete repository structure and the specific issue description."
