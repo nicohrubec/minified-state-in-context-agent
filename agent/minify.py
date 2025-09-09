@@ -53,10 +53,6 @@ DEFINED_TRANSFORMATIONS = [
 def minify(source_files: List[str], transformations: List[str]):
     source_maps = {}
 
-    if IMPORT_MERGE_TRANSFORMATION_CONST in transformations:
-        source_files = merge_imports(source_files)
-    if IMPORT_REMOVE_TRANSFORMATION_CONST in transformations:
-        source_files = remove_imports(source_files)
     if BLANK_LINE_TRANSFORMATION_CONST in transformations:
         source_files = remove_blank_lines(source_files)
     if COMMENTS_REMOVE_TRANSFORMATION_CONST in transformations:
@@ -119,6 +115,10 @@ def minify(source_files: List[str], transformations: List[str]):
             source_files, obfuscate.obfuscatable_class
         )
         source_maps[SHORT_CLASSES_MAP_WITH_MAP_TRANSFORMATION_CONST] = class_source_map
+    if IMPORT_MERGE_TRANSFORMATION_CONST in transformations:
+        source_files = merge_imports(source_files)
+    if IMPORT_REMOVE_TRANSFORMATION_CONST in transformations:
+        source_files = remove_imports(source_files)
 
     unknown_transformations = [
         t for t in transformations if t not in DEFINED_TRANSFORMATIONS
