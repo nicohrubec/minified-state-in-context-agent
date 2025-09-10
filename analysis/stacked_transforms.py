@@ -61,6 +61,39 @@ TRANSFORMATION_COMBINATIONS = OrderedDict(
                 ],
             },
         ),
+        (
+            "+ Remove Imports",
+            {
+                "eval_name": "obscure-remove-comments-docstrings-blank-lines-reduce-operators-remove-imports",
+                "transformations": [
+                    "short_vars_map",
+                    "short_funcs_map",
+                    "short_classes",
+                    "remove_comments",
+                    "remove_docstrings",
+                    "remove_blank_lines",
+                    "reduce_operators",
+                    "remove_imports",
+                ],
+            },
+        ),
+        (
+            "+ Dedent",
+            {
+                "eval_name": "obscure-remove-comments-docstrings-blank-lines-reduce-operators-remove-imports-dedent",
+                "transformations": [
+                    "short_vars_map",
+                    "short_funcs_map",
+                    "short_classes",
+                    "remove_comments",
+                    "remove_docstrings",
+                    "remove_blank_lines",
+                    "reduce_operators",
+                    "remove_imports",
+                    "dedent",
+                ],
+            },
+        ),
     ]
 )
 
