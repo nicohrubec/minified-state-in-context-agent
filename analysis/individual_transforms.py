@@ -74,7 +74,7 @@ for eval_transform, metric_transform in zip(
 print("Individual Transformations Analysis")
 print("=" * 80)
 print(
-    f"{'Transformation':<35} {'Resolved %':<12} {'Resolved':<10} {'Input Tokens':<15} {'Output Tokens':<15} {'Total Cost ($)':<15}"
+    f"{'Transformation':<35} {'Resolved %':<12} {'Resolved':<10} {'Input Tokens':<15} {'Output Tokens':<15} {'Per-instance Cost ($)':<15}"
 )
 print("-" * 95)
 
@@ -131,7 +131,7 @@ for i, row in df_results.iterrows():
         alpha=0.8,
     )
 
-plt.xlabel("Total Cost (USD)")
+plt.xlabel("Per-instance Cost (USD)")
 plt.ylabel("Resolved Percentage (%)")
 plt.title("Performance vs Cost by Transformation")
 plt.grid(True, alpha=0.3)
@@ -203,7 +203,7 @@ for i, (input_cost, output_cost, total_cost) in enumerate(
     )
 
 plt.xlabel("Transformation")
-plt.ylabel("Cost (USD)")
+plt.ylabel("Per-instance Cost (USD)")
 plt.title("Input vs Output Costs by Transformation")
 plt.xticks(x_pos, df_results["transformation"], rotation=45, ha="right")
 plt.legend()

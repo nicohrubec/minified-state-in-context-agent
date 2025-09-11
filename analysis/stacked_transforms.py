@@ -11,7 +11,7 @@ TRANSFORMATION_COMBINATIONS = OrderedDict(
     [
         ("No Compression", {"eval_name": "no-compression", "transformations": []}),
         (
-            "+ Obscure",
+            "+ Obfuscate",
             {
                 "eval_name": "obscure",
                 "transformations": [
@@ -185,7 +185,7 @@ for i, row in df_results.iterrows():
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.7),
     )
 
-plt.xlabel("Total Cost (USD)")
+plt.xlabel("Per-instance Cost (USD)")
 plt.ylabel("Number of Resolved Instances")
 plt.title("Resolved Instances vs Cost for Stacked Transformations")
 plt.gca().invert_xaxis()
