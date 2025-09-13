@@ -86,32 +86,7 @@ def analyze_structural_characters(source: str) -> dict:
             start = line_col_to_offset(node.lineno, node.col_offset)
             end = line_col_to_offset(node.end_lineno, node.end_col_offset)
             call_text = source[start:end]
-
-            if isinstance(node.func, ast.Name) and node.func.id == "print":
-                structural_usage["print_statements"] += len(call_text)
-
-            elif isinstance(node.func, ast.Attribute):
-                if node.func.attr in {
-                    "debug",
-                    "info",  # annotated assignments
-                    "warning",
-                    "error",
-                    "critical",
-                    "exception",
-                    "log",
-                }:
-                    structural_usage["logger_calls"] += len(call_text)
-                else:
-                    structural_usage["function_calls"] += len(call_text)
-
-            else:
-                structural_usage["function_calls"] += len(call_text)
-
-        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-            for deco in node.decorator_list:
-                start = line_col_to_offset(deco.lineno, deco.col_offset)
-                end = line_col_to_offset(deco.end_lineno, deco.end_col_offset)
-                structural_usage["decorators"] += len(source[start:end])
+            structural_usage["function_calls"] += len(call_text)
 
     blank_lines = [line for line in lines if line.strip() == ""]
     structural_usage["blank_lines"] = sum(len(line) for line in blank_lines)
