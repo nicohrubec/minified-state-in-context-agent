@@ -16,7 +16,7 @@ def parse_arguments():
     parser.add_argument(
         "--output_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token-analysis",
+        default="/Users/nicolashrubec/dev/agent-state-management/data/repository-analysis",
     )
     parser.add_argument(
         "--repository_dataset_name",
