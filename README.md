@@ -40,7 +40,7 @@ python dataset_loader/main.py [OPTIONS]
 ### File structure analysis
 1. Collect data:
 ```bash
-python collect_file_structure_stats.py [OPTIONS]
+python repository_analysis/collect_file_structure_stats.py [OPTIONS]
 ```
 
 **Arguments:**
@@ -62,7 +62,7 @@ python token_analysis/plot_file_structure_analysis.py [OPTIONS]
 ### File type analysis
 1. Collect data:
 ```bash
-python collect_file_type_stats.py [OPTIONS]
+python repository_analysis/collect_file_type_stats.py [OPTIONS]
 ```
 
 **Arguments:**

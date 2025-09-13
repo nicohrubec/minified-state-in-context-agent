@@ -213,7 +213,7 @@ The returned list should be separated by new lines and wrapped
     return prompt, replacements
 
 
-def build_repair_prompt(problem, problem_files, hash_to_content, transformations):
+def build_repair_prompt(problem, problem_files, hash_to_content, transformations=[]):
     problem_statement = problem["problem_statement"]
 
     # collect source files

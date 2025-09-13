@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 from datasets import load_dataset, load_from_disk
 from collections import defaultdict
@@ -7,6 +8,7 @@ from tqdm import tqdm
 from pathlib import Path
 import pandas as pd
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agent.prompt import build_repair_prompt
 from shared.tokens import count_tokens
@@ -105,7 +107,7 @@ def main():
         repository = problem["repo"].split("/")[-1]
         repositories.add(repository)
 
-        system_prompt, user_prompt, code_input = build_repair_prompt(
+        system_prompt, user_prompt, code_input, _ = build_repair_prompt(
             problem, files, hash_to_content
         )
         full_prompt = system_prompt + user_prompt

@@ -8,7 +8,7 @@ from tqdm import tqdm
 from pathlib import Path
 
 
-from token_analysis.analyze_file_structure import analyze_file_structure
+from analyze_file_structure import analyze_file_structure
 
 
 def parse_arguments():
