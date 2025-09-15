@@ -67,15 +67,15 @@ def main(lexical_path, structural_path):
     plot_distribution(
         df_lex,
         lex_cols,
-        "Mean Lexical Token Distribution Across All Instances",
+        "Lexical Token Distribution",
         "Character Count",
     )
     plot_top5_mean_distribution(
         df_lex,
         lex_cols,
         total_col="total_chars",
-        title="Mean Lexical Token Distribution (Top 5 Instances)",
-        ylabel="Mean Character Count",
+        title="Lexical Token Distribution (Large Instances)",
+        ylabel="Character Count",
     )
 
     # Structural
@@ -84,15 +84,15 @@ def main(lexical_path, structural_path):
     plot_distribution(
         df_struct,
         struct_cols,
-        "Mean Structural Token Distribution Across All Instances",
+        "Structural Token Distribution",
         "Character Count",
     )
     plot_top5_mean_distribution(
         df_struct,
         struct_cols,
         total_col="total_chars",
-        title="Mean Structural Token Distribution (Top 5 Instances)",
-        ylabel="Mean Character Count",
+        title="Structural Token Distribution (Large Instances)",
+        ylabel="Character Count",
     )
 
 

@@ -40,7 +40,7 @@ def plot_token_type_percentages(df):
     ax.set_ylim(0, max_pct * 1.1)
 
     ax.set_title(
-        "Percentage of Natural Language Instructions vs Code Tokens", fontsize=16
+        "Natural Language Instructions vs Code Tokens", fontsize=16
     )
 
     # Show 3 decimal places
@@ -95,7 +95,7 @@ def plot_mean_file_type_distribution(df):
         )
 
     ax.set_ylim(0, max(data["Percentage"]) * 1.1)
-    ax.set_title("Mean File-Type Token Distribution Across Repositories", fontsize=16)
+    ax.set_title("File-Type Token Distribution", fontsize=16)
 
     plt.tight_layout()
     plt.show()
@@ -128,7 +128,7 @@ def plot_stacked_token_counts_by_repo(df):
     ax = df_stacked.plot(kind="bar", stacked=True, figsize=(10, 6), colormap="tab20c")
 
     ax.set_ylabel("Token Count")
-    ax.set_title("Code Token Count per Repository by File Type", fontsize=16)
+    ax.set_title("Token Count per Repository by File Type", fontsize=16)
     ax.legend(title="File Type", bbox_to_anchor=(1.05, 1), loc="upper left")
 
     plt.tight_layout()
