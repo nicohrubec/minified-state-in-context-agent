@@ -9,13 +9,25 @@ sns.set_theme(style="whitegrid", context="talk")
 results_path = Path(
     "/Users/nicolashrubec/dev/agent-state-management/data/agent_results"
 )
-list_results_path = results_path / "ranking_metrics_SWE-bench_Verified_test_list_.csv"
-trie_results_path = results_path / "ranking_metrics_SWE-bench_Verified_test_trie_.csv"
+list_results_path = (
+    results_path
+    / "metrics"
+    / "ranking_metrics_gpt-4.1_SWE-bench_Verified_test_list_.csv"
+)
+trie_results_path = (
+    results_path
+    / "metrics"
+    / "ranking_metrics_gpt-4.1_SWE-bench_Verified_test_trie_.csv"
+)
 int_folder_results_path = (
-    results_path / "ranking_metrics_SWE-bench_Verified_test_int_folder_.csv"
+    results_path
+    / "metrics"
+    / "ranking_metrics_gpt-4.1_SWE-bench_Verified_test_int_folder_.csv"
 )
 int_path_results_path = (
-    results_path / "ranking_metrics_SWE-bench_Verified_test_int_path_.csv"
+    results_path
+    / "metrics"
+    / "ranking_metrics_gpt-4.1_SWE-bench_Verified_test_int_path_.csv"
 )
 
 list_results = pd.read_csv(list_results_path)

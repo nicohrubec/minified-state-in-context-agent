@@ -39,9 +39,7 @@ def plot_token_type_percentages(df):
     max_pct = data["Percentage"].max()
     ax.set_ylim(0, max_pct * 1.1)
 
-    ax.set_title(
-        "Natural Language Instructions vs Code Tokens", fontsize=16
-    )
+    ax.set_title("Natural Language Instructions vs Code Tokens", fontsize=16)
 
     # Show 3 decimal places
     for p, pct in zip(ax.patches, data["Percentage"]):
