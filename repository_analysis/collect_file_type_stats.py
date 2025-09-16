@@ -10,7 +10,7 @@ import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agent.prompt import build_repair_prompt
+from agent.prompt import build_repair_prompt, build_file_ranking_prompt
 from shared.tokens import count_tokens
 
 
@@ -96,8 +96,13 @@ def main():
 
     repository_to_nl_tokens = defaultdict(list)
     repository_to_code_tokens = defaultdict(list)
+    repository_to_repair_tokens = defaultdict(list)
+    repository_to_ranking_tokens = defaultdict(list)
     repository_to_file_type_tokens = defaultdict(lambda: defaultdict(list))
     repositories = set()
+
+    total_repair_tokens = 0
+    total_ranking_tokens = 0
 
     for problem, files in tqdm(
         zip(problems, problem_files),
@@ -106,6 +111,9 @@ def main():
     ):
         repository = problem["repo"].split("/")[-1]
         repositories.add(repository)
+
+        ranking_prompt, _ = build_file_ranking_prompt(problem, files)
+        ranking_input_tokens = count_tokens(ranking_prompt)
 
         system_prompt, user_prompt, code_input, _ = build_repair_prompt(
             problem, files, hash_to_content
@@ -118,6 +126,11 @@ def main():
 
         repository_to_nl_tokens[repository].append(nl_tokens)
         repository_to_code_tokens[repository].append(code_tokens)
+        repository_to_repair_tokens[repository].append(all_tokens)
+        repository_to_ranking_tokens[repository].append(ranking_input_tokens)
+
+        total_repair_tokens += all_tokens
+        total_ranking_tokens += ranking_input_tokens
 
         instance_filetype_tokens = defaultdict(int)
 
@@ -141,12 +154,24 @@ def main():
         code_mean = np.mean(code_values)
         code_std = np.std(code_values)
 
+        repair_values = repository_to_repair_tokens[repository]
+        repair_mean = np.mean(repair_values)
+        repair_std = np.std(repair_values)
+
+        ranking_values = repository_to_ranking_tokens[repository]
+        ranking_mean = np.mean(ranking_values)
+        ranking_std = np.std(ranking_values)
+
         row = {
             "repository": repository,
             "nl_mean": nl_mean,
             "nl_std": nl_std,
             "code_mean": code_mean,
             "code_std": code_std,
+            "repair_input_mean": repair_mean,
+            "repair_input_std": repair_std,
+            "ranking_input_mean": ranking_mean,
+            "ranking_input_std": ranking_std,
         }
 
         for file_type in file_types:
