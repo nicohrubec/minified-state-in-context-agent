@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 file_types = ["core", "config", "test", "docs", "bench", "build"]
 
 
-def plot_hierarchical_token_pie(df: pd.DataFrame, repair_cap: int | None = None):
+def plot_token_distribution_pie(df: pd.DataFrame, repair_cap: int | None = None):
     work_df = df.copy()
 
     if repair_cap is not None and repair_cap > 0:
@@ -50,7 +50,7 @@ def plot_hierarchical_token_pie(df: pd.DataFrame, repair_cap: int | None = None)
     colors = ["#4C78A8", "#E45756", "#72B7B2"]
 
     sns.set(style="white", context="talk")
-    fig, ax = plt.subplots(figsize=(7, 7))
+    fig, ax = plt.subplots(figsize=(6, 4))
 
     # Ensure Repair NL slice has a minimum visible size (visual only)
     visual_sizes = sizes.copy()
@@ -88,11 +88,11 @@ def plot_hierarchical_token_pie(df: pd.DataFrame, repair_cap: int | None = None)
         f"Repair Code ({pct(total_code)})",
     ]
     ax.legend(wedges, legend_labels, loc="center left", bbox_to_anchor=(1, 0.5))
-    fig.suptitle("Distribution of Ranking and Repair Tokens", fontsize=16, y=0.8)
+    fig.suptitle("Distribution of Ranking and Repair Tokens", fontsize=16)
 
     centre_circle = plt.Circle((0, 0), 0.32, fc="white")
     fig.gca().add_artist(centre_circle)
-    plt.tight_layout(rect=(0.0, 0.0, 1.0, 1.0))
+    plt.tight_layout(rect=[0, 0, 0.85, 1])
     plt.show()
 
 
@@ -189,6 +189,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     data = pd.read_csv(args.file)
-    plot_hierarchical_token_pie(data, repair_cap=args.repair_cap)
+    plot_token_distribution_pie(data, repair_cap=args.repair_cap)
     plot_mean_file_type_distribution(data)
     plot_stacked_token_counts_by_repo(data)
