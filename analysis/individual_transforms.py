@@ -39,7 +39,11 @@ for eval_transform, metric_transform in zip(
 input_dollar_cost_per_token = 2.0 / 1e6
 output_dollar_cost_per_token = 8.0 / 1e6
 
+excluded_transformations = ["short-vars-map", "short-funcs-map", "short-classes-map"]
+
 results_data = []
+individual_results_data = []
+obfuscation_ablation_data = []
 
 for eval_transform, metric_transform in zip(
     eval_transform_names, metrics_transform_names
@@ -57,24 +61,35 @@ for eval_transform, metric_transform in zip(
     output_cost = avg_output_tokens * output_dollar_cost_per_token
     total_cost = input_cost + output_cost
 
-    results_data.append(
-        {
-            "transformation": eval_transform,
-            "resolved_percentage": resolved_percentage,
-            "resolved_count": resolved_instances,
-            "submitted_count": submitted_instances,
-            "avg_input_tokens": avg_input_tokens,
-            "avg_output_tokens": avg_output_tokens,
-            "input_cost": input_cost,
-            "output_cost": output_cost,
-            "total_cost": total_cost,
-        }
-    )
+    result_dict = {
+        "transformation": eval_transform,
+        "resolved_percentage": resolved_percentage,
+        "resolved_count": resolved_instances,
+        "submitted_count": submitted_instances,
+        "avg_input_tokens": avg_input_tokens,
+        "avg_output_tokens": avg_output_tokens,
+        "input_cost": input_cost,
+        "output_cost": output_cost,
+        "total_cost": total_cost,
+    }
+
+    results_data.append(result_dict)
+
+    # Separate data for different plots
+    if eval_transform not in excluded_transformations:
+        individual_results_data.append(result_dict)
+
+    # For obfuscation ablation: include transformations with and without map
+    if any(
+        transform in eval_transform
+        for transform in ["short-vars", "short-funcs", "short-classes"]
+    ):
+        obfuscation_ablation_data.append(result_dict)
 
 print("Individual Transformations Analysis")
 print("=" * 80)
 print(
-    f"{'Transformation':<35} {'Resolved %':<12} {'Resolved':<10} {'Input Tokens':<15} {'Output Tokens':<15} {'Per-instance Cost ($)':<15}"
+    f"{'Transformation':<35} {'Resolved %':<12} {'Resolved':<10} {'Input Tokens':<15} {'Output Tokens':<15} {'Per-Instance Cost ($)':<15}"
 )
 print("-" * 95)
 
@@ -86,7 +101,7 @@ for result in results_data:
 print("-" * 95)
 print()
 
-df_results = pd.DataFrame(results_data)
+df_results = pd.DataFrame(individual_results_data)
 
 # performance vs cost scatter plot
 plt.figure(figsize=(12, 8))
@@ -99,8 +114,8 @@ scatter = plt.scatter(
     cmap="viridis",
 )
 
+# label points
 for i, row in df_results.iterrows():
-    # labeling with some logic to make labels of close points not overlap
     has_close_point = False
     close_partner_index = None
     for j, other_row in df_results.iterrows():
@@ -131,7 +146,7 @@ for i, row in df_results.iterrows():
         alpha=0.8,
     )
 
-plt.xlabel("Per-instance Cost (USD)")
+plt.xlabel("Per-Instance Cost (USD)")
 plt.ylabel("Resolved Percentage (%)")
 plt.title("Performance vs Cost by Transformation")
 plt.grid(True, alpha=0.3)
@@ -203,7 +218,7 @@ for i, (input_cost, output_cost, total_cost) in enumerate(
     )
 
 plt.xlabel("Transformation")
-plt.ylabel("Per-instance Cost (USD)")
+plt.ylabel("Per-Instance Cost (USD)")
 plt.title("Input vs Output Costs by Transformation")
 plt.xticks(x_pos, df_results["transformation"], rotation=45, ha="right")
 plt.legend()
@@ -214,10 +229,10 @@ plt.show()
 # detailed performance breakdown for each transformation
 plt.figure(figsize=(16, 10))
 
-# Prepare data for stacked bar chart
 breakdown_data = []
-
 for eval_transform in eval_transform_names:
+    if eval_transform in excluded_transformations:
+        continue
     performance = performance_data[eval_transform]
     submitted_instances = performance["submitted_instances"]
 
@@ -243,14 +258,14 @@ for eval_transform in eval_transform_names:
 
 breakdown_data.sort(key=lambda x: x["resolved_percentage"], reverse=True)
 
-# Extract sorted data
+# extract sorted data
 transformations = [item["transformation"] for item in breakdown_data]
 resolved_percentages = [item["resolved_percentage"] for item in breakdown_data]
 unresolved_percentages = [item["unresolved_percentage"] for item in breakdown_data]
 error_percentages = [item["error_percentage"] for item in breakdown_data]
 empty_patch_percentages = [item["empty_patch_percentage"] for item in breakdown_data]
 
-# Create stacked bar chart
+# create stacked bar chart
 x_pos = range(len(transformations))
 
 bars1 = plt.bar(
@@ -293,6 +308,52 @@ plt.xticks(x_pos, transformations, rotation=45, ha="right")
 plt.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
 plt.ylim(0, 100)
 plt.grid(True, alpha=0.3, axis="y")
+plt.tight_layout()
+plt.show()
+
+# Obfuscation ablation plot
+plt.figure(figsize=(12, 8))
+df_obfuscation = pd.DataFrame(obfuscation_ablation_data)
+
+with_map = df_obfuscation[df_obfuscation["transformation"].str.contains("map-with-map")]
+without_map = df_obfuscation[
+    ~df_obfuscation["transformation"].str.contains("map-with-map")
+    & df_obfuscation["transformation"].str.contains("map")
+]
+
+plt.scatter(
+    with_map["total_cost"],
+    with_map["resolved_count"],
+    label="With in-context map",
+    s=100,
+    alpha=0.7,
+    color="blue",
+)
+plt.scatter(
+    without_map["total_cost"],
+    without_map["resolved_count"],
+    label="Without in-context map",
+    s=100,
+    alpha=0.7,
+    color="red",
+)
+
+# add labels
+for _, row in df_obfuscation.iterrows():
+    plt.annotate(
+        row["transformation"],
+        (row["total_cost"], row["resolved_count"]),
+        xytext=(5, 5),
+        textcoords="offset points",
+        fontsize=9,
+        alpha=0.8,
+    )
+
+plt.xlabel("Per-Instance Cost (USD)")
+plt.ylabel("Number of Resolved Instances")
+plt.title("Obfuscation with vs without in-context map")
+plt.legend()
+plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.show()
 
