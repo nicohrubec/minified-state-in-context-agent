@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import seaborn as sns
 from collections import OrderedDict
 
@@ -343,3 +344,147 @@ for _, row in df_sorted.iterrows():
     )
 
 print("-" * 170)
+
+# plot comparison of individual samples solved by each transformation combination
+# show all transformation combinations for gpt-4.1
+resolved_ids_by_combination = {}
+all_instances_set = set()
+
+for combo_key, combo_data in TRANSFORMATION_COMBINATIONS.items():
+    eval_filename = models["gpt-4.1"]["eval_pattern"].format(
+        combination_name=combo_data["eval_name"]
+    )
+    eval_path = base_path_evals / eval_filename
+    metrics_filename = models["gpt-4.1"]["metrics_pattern"].format(
+        transformations="_".join(combo_data["transformations"])
+    )
+    metrics_path = base_path_metrics / metrics_filename
+
+    if eval_path.exists():
+        with open(eval_path, "r") as f:
+            eval_results = json.load(f)
+        resolved_ids_by_combination[combo_key] = set(eval_results["resolved_ids"])
+
+        # get all instance IDs from metrics file
+        if metrics_path.exists():
+            metrics_df = pd.read_csv(metrics_path)
+            all_instances_set.update(metrics_df["instance_id"].tolist())
+
+if len(resolved_ids_by_combination) > 0:
+    all_instances_sorted = sorted(list(all_instances_set))
+    num_instances = len(all_instances_sorted)
+
+    # create status arrays for each combination
+    combination_statuses = []
+    for combo_key in TRANSFORMATION_COMBINATIONS.keys():
+        if combo_key in resolved_ids_by_combination:
+            status = [
+                1 if instance_id in resolved_ids_by_combination[combo_key] else 0
+                for instance_id in all_instances_sorted
+            ]
+            combination_statuses.append((combo_key, status))
+
+    # reverse order so no-compression is on top
+    combination_statuses = list(reversed(combination_statuses))
+
+    num_combinations = len(combination_statuses)
+    fig, ax = plt.subplots(figsize=(20, max(8, num_combinations * 1.2)))
+
+    bar_height = 0.8
+    y_positions = list(range(num_combinations))
+
+    # plot each instance as a colored segment
+    for i, (combo_key, instance_status) in enumerate(combination_statuses):
+        for j, status in enumerate(instance_status):
+            color = "#2ca02c" if status == 1 else "#d62728"
+            ax.barh(
+                y_positions[i], 1, bar_height, left=j, color=color, edgecolor="none"
+            )
+
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels([combo_key for combo_key, _ in combination_statuses])
+    ax.set_xlabel("Individual Instances")
+    ax.set_title("Instance-Level Comparison")
+    ax.set_xlim(0, num_instances)
+
+    # add legend
+    legend_elements = [
+        Patch(facecolor="#2ca02c", label="Resolved"),
+        Patch(facecolor="#d62728", label="Unresolved"),
+    ]
+    ax.legend(handles=legend_elements, loc="upper right")
+
+    plt.tight_layout()
+    plt.show()
+
+    print("\nIndividual Sample Statistics (GPT-4.1):")
+    print("=" * 80)
+    for combo_key in TRANSFORMATION_COMBINATIONS.keys():
+        if combo_key in resolved_ids_by_combination:
+            resolved_count = len(resolved_ids_by_combination[combo_key])
+            print(f"{combo_key}: {resolved_count} resolved")
+    print("-" * 80)
+
+# plot comparison of just no-compression vs full transformations
+if (
+    "No Compression" in resolved_ids_by_combination
+    and "+ Dedent" in resolved_ids_by_combination
+):
+    no_compression_solved = resolved_ids_by_combination["No Compression"]
+    full_transform_solved = resolved_ids_by_combination["+ Dedent"]
+
+    # get all unique instance IDs from all instances (already collected above)
+    all_instances_sorted_2 = sorted(list(all_instances_set))
+    num_instances_2 = len(all_instances_sorted_2)
+
+    no_compression_status = [
+        1 if instance_id in no_compression_solved else 0
+        for instance_id in all_instances_sorted_2
+    ]
+    full_transform_status = [
+        1 if instance_id in full_transform_solved else 0
+        for instance_id in all_instances_sorted_2
+    ]
+
+    fig, ax = plt.subplots(figsize=(20, 6))
+
+    bar_height = 0.35
+    y_positions = [0, 1]
+
+    # plot each instance as a colored segment
+    for i, instance_status in enumerate([full_transform_status, no_compression_status]):
+        for j, status in enumerate(instance_status):
+            color = "#2ca02c" if status == 1 else "#d62728"
+            ax.barh(
+                y_positions[i], 1, bar_height, left=j, color=color, edgecolor="none"
+            )
+
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels(["+ Dedent (All Transforms)", "No Compression"])
+    ax.set_xlabel("Individual Instances")
+    ax.set_title("Instance-Level Comparison")
+    ax.set_xlim(0, num_instances_2)
+
+    # add legend
+    legend_elements = [
+        Patch(facecolor="#2ca02c", label="Resolved"),
+        Patch(facecolor="#d62728", label="Unresolved"),
+    ]
+    ax.legend(handles=legend_elements, loc="upper right")
+
+    plt.tight_layout()
+    plt.show()
+
+    both_solved = no_compression_solved & full_transform_solved
+    only_no_compression = no_compression_solved - full_transform_solved
+    only_full_transform = full_transform_solved - no_compression_solved
+
+    print("\nNo Compression vs All Transformations:")
+    print("=" * 80)
+    print(f"Resolved by both: {len(both_solved)}")
+    print(f"Resolved only by no-compression: {len(only_no_compression)}")
+    print(f"Resolved only by all transformations: {len(only_full_transform)}")
+    print(
+        f"Total unique resolved: {len(no_compression_solved | full_transform_solved)}"
+    )
+    print("-" * 80)
