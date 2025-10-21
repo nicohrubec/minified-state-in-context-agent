@@ -8,6 +8,18 @@ from agent.minify import DEFINED_TRANSFORMATIONS
 
 sns.set_theme(style="whitegrid", context="talk")
 
+
+def transform_name_for_display(transformation_name):
+    if transformation_name.endswith("-map-with-map"):
+        return transformation_name.replace("-map-with-map", "-map")
+    elif transformation_name.endswith("-map") and not transformation_name.endswith(
+        "-map-with-map"
+    ):
+        return transformation_name.replace("-map", "")
+    else:
+        return transformation_name
+
+
 base_path_evals = Path(
     "/Users/nicolashrubec/dev/agent-state-management/data/eval_results"
 )
@@ -43,7 +55,7 @@ excluded_transformations = ["short-vars-map", "short-funcs-map", "short-classes-
 
 results_data = []
 individual_results_data = []
-obfuscation_ablation_data = []
+renaming_ablation_data = []
 
 for eval_transform, metric_transform in zip(
     eval_transform_names, metrics_transform_names
@@ -79,12 +91,12 @@ for eval_transform, metric_transform in zip(
     if eval_transform not in excluded_transformations:
         individual_results_data.append(result_dict)
 
-    # For obfuscation ablation: include transformations with and without map
+    # For renaming ablation: include transformations with and without map
     if any(
         transform in eval_transform
         for transform in ["short-vars", "short-funcs", "short-classes"]
     ):
-        obfuscation_ablation_data.append(result_dict)
+        renaming_ablation_data.append(result_dict)
 
 print("Individual Transformations Analysis")
 print("=" * 80)
@@ -95,7 +107,7 @@ print("-" * 95)
 
 for result in results_data:
     print(
-        f"{result['transformation']:<35} {result['resolved_percentage']:<12.2f} {result['resolved_count']:<10} {result['avg_input_tokens']:<15.0f} {result['avg_output_tokens']:<15.0f} {result['total_cost']:<15.4f}"
+        f"{transform_name_for_display(result['transformation']):<35} {result['resolved_percentage']:<12.2f} {result['resolved_count']:<10} {result['avg_input_tokens']:<15.0f} {result['avg_output_tokens']:<15.0f} {result['total_cost']:<15.4f}"
     )
 
 print("-" * 95)
@@ -138,7 +150,7 @@ for i, row in df_results.iterrows():
         x_offset = -10
 
     plt.annotate(
-        row["transformation"],
+        transform_name_for_display(row["transformation"]),
         (row["total_cost"], row["resolved_percentage"]),
         xytext=(x_offset, y_offset),
         textcoords="offset points",
@@ -157,7 +169,7 @@ plt.show()
 plt.figure(figsize=(14, 8))
 df_results = df_results.sort_values("resolved_percentage", ascending=False)
 bars = plt.bar(
-    df_results["transformation"],
+    df_results["transformation"].apply(transform_name_for_display),
     df_results["resolved_percentage"],
     color="skyblue",
     edgecolor="navy",
@@ -220,7 +232,12 @@ for i, (input_cost, output_cost, total_cost) in enumerate(
 plt.xlabel("Transformation")
 plt.ylabel("Per-Instance Cost (USD)")
 plt.title("Input vs Output Costs by Transformation")
-plt.xticks(x_pos, df_results["transformation"], rotation=45, ha="right")
+plt.xticks(
+    x_pos,
+    df_results["transformation"].apply(transform_name_for_display),
+    rotation=45,
+    ha="right",
+)
 plt.legend()
 plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
@@ -304,21 +321,26 @@ bars4 = plt.bar(
 plt.xlabel("Transformation")
 plt.ylabel("Percentage of Instances (%)")
 plt.title("Breakdown of Instance Outcomes by Transformation")
-plt.xticks(x_pos, transformations, rotation=45, ha="right")
+plt.xticks(
+    x_pos,
+    [transform_name_for_display(t) for t in transformations],
+    rotation=45,
+    ha="right",
+)
 plt.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
 plt.ylim(0, 100)
 plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
 plt.show()
 
-# Obfuscation ablation plot
+# Renaming ablation plot
 plt.figure(figsize=(12, 8))
-df_obfuscation = pd.DataFrame(obfuscation_ablation_data)
+df_renaming = pd.DataFrame(renaming_ablation_data)
 
-with_map = df_obfuscation[df_obfuscation["transformation"].str.contains("map-with-map")]
-without_map = df_obfuscation[
-    ~df_obfuscation["transformation"].str.contains("map-with-map")
-    & df_obfuscation["transformation"].str.contains("map")
+with_map = df_renaming[df_renaming["transformation"].str.contains("map-with-map")]
+without_map = df_renaming[
+    ~df_renaming["transformation"].str.contains("map-with-map")
+    & df_renaming["transformation"].str.contains("map")
 ]
 
 plt.scatter(
@@ -339,9 +361,9 @@ plt.scatter(
 )
 
 # add labels
-for _, row in df_obfuscation.iterrows():
+for _, row in df_renaming.iterrows():
     plt.annotate(
-        row["transformation"],
+        transform_name_for_display(row["transformation"]),
         (row["total_cost"], row["resolved_count"]),
         xytext=(5, 5),
         textcoords="offset points",
@@ -351,7 +373,7 @@ for _, row in df_obfuscation.iterrows():
 
 plt.xlabel("Per-Instance Cost (USD)")
 plt.ylabel("Number of Resolved Instances")
-plt.title("Obfuscation with vs without in-context map")
+plt.title("Renaming Identifiers with vs without in-context map")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
@@ -373,5 +395,5 @@ for item in breakdown_data:
     empty_patches = performance["empty_patch_instances"]
 
     print(
-        f"{eval_transform:<35} {resolved:<10} {unresolved:<12} {errors:<8} {empty_patches:<15}"
+        f"{transform_name_for_display(eval_transform):<35} {resolved:<10} {unresolved:<12} {errors:<8} {empty_patches:<15}"
     )

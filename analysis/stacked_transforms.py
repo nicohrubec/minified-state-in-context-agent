@@ -12,7 +12,7 @@ TRANSFORMATION_COMBINATIONS = OrderedDict(
     [
         ("No Compression", {"eval_name": "no-compression", "transformations": []}),
         (
-            "+ Obfuscate",
+            "+ Rename Identifiers",
             {
                 "eval_name": "obscure",
                 "transformations": [
