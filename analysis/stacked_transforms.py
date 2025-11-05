@@ -99,10 +99,10 @@ TRANSFORMATION_COMBINATIONS = OrderedDict(
 )
 
 base_path_evals = Path(
-    "/Users/nicolashrubec/dev/agent-state-management/data/eval_results"
+    "/Users/nicolashrubec/dev/minified-state-in-context-agent/data/eval_results"
 )
 base_path_metrics = Path(
-    "/Users/nicolashrubec/dev/agent-state-management/data/agent_results/metrics"
+    "/Users/nicolashrubec/dev/minified-state-in-context-agent/data/agent_results/metrics"
 )
 
 # gpt 4.1

@@ -30,12 +30,12 @@ def parse_arguments():
     parser.add_argument(
         "--repo_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/repositories",
     )
     parser.add_argument(
         "--dataset_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/hf_datasets",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/hf_datasets",
     )
     parser.add_argument(
         "--output_dataset_prefix",

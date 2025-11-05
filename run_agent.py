@@ -22,16 +22,16 @@ def parse_arguments():
     parser.add_argument(
         "--dataset_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/hf_datasets",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/hf_datasets",
     )
     parser.add_argument(
         "--output_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/agent_results",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/agent_results",
     )
     parser.add_argument(
         "--repository_directory",
-        default="/Users/nicolashrubec/dev/agent-state-management/data/repositories",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/repositories",
     )
     parser.add_argument("--skip_repair", action="store_true")
     parser.add_argument(

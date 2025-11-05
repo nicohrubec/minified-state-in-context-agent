@@ -16,7 +16,7 @@ def parse_arguments():
     parser.add_argument(
         "--output_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token_analysis",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/token_analysis",
     )
     parser.add_argument(
         "--repository_dataset_name",
@@ -28,7 +28,7 @@ def parse_arguments():
     parser.add_argument(
         "--dataset_directory",
         type=Path,
-        default="/Users/nicolashrubec/dev/agent-state-management/data/hf_datasets",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/hf_datasets",
     )
     return parser.parse_args()
 

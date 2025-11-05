@@ -100,12 +100,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--lexical",
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token_analysis/lexical_SWE-bench_Verified_test.csv",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/token_analysis/lexical_SWE-bench_Verified_test.csv",
         help="Path to lexical token CSV",
     )
     parser.add_argument(
         "--structural",
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token_analysis/structural_SWE-bench_Verified_test.csv",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/token_analysis/structural_SWE-bench_Verified_test.csv",
         help="Path to structural token CSV",
     )
     args = parser.parse_args()

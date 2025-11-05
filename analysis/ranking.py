@@ -7,7 +7,7 @@ import ast
 sns.set_theme(style="whitegrid", context="talk")
 
 results_path = Path(
-    "/Users/nicolashrubec/dev/agent-state-management/data/agent_results"
+    "/Users/nicolashrubec/dev/minified-state-in-context-agent/data/agent_results"
 )
 list_results_path = (
     results_path

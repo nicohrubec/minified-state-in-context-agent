@@ -179,7 +179,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--file",
         help="CSV file with repository statistics",
-        default="/Users/nicolashrubec/dev/agent-state-management/data/token_analysis/file_type_SWE-bench_Verified_test.csv",
+        default="/Users/nicolashrubec/dev/minified-state-in-context-agent/data/token_analysis/file_type_SWE-bench_Verified_test.csv",
     )
     parser.add_argument(
         "--repair_cap",

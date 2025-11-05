@@ -21,10 +21,10 @@ def transform_name_for_display(transformation_name):
 
 
 base_path_evals = Path(
-    "/Users/nicolashrubec/dev/agent-state-management/data/eval_results"
+    "/Users/nicolashrubec/dev/minified-state-in-context-agent/data/eval_results"
 )
 base_path_metrics = Path(
-    "/Users/nicolashrubec/dev/agent-state-management/data/agent_results/metrics"
+    "/Users/nicolashrubec/dev/minified-state-in-context-agent/data/agent_results/metrics"
 )
 eval_transform_names = ["no-compression"] + [
     t.replace("_", "-") for t in DEFINED_TRANSFORMATIONS
