@@ -226,6 +226,7 @@ plt.gca().invert_xaxis()
 plt.gca().yaxis.set_major_locator(plt.MaxNLocator(integer=True))
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
+plt.savefig("../plots/performance_cost_scatter_stacked.svg", format="svg")
 plt.show()
 
 df_all_results = pd.DataFrame(all_results_data)
@@ -308,6 +309,7 @@ plt.gca().invert_xaxis()
 plt.gca().yaxis.set_major_locator(plt.MaxNLocator(integer=True))
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
+plt.savefig("../plots/performance_input_tokens_scatter_stacked.svg", format="svg")
 plt.show()
 
 print("Summary Table:")
@@ -415,6 +417,7 @@ if len(resolved_ids_by_combination) > 0:
     ax.legend(handles=legend_elements, loc="upper right")
 
     plt.tight_layout()
+    plt.savefig("../plots/resolved_instance_level_all_stacked.svg", format="svg")
     plt.show()
 
     print("\nIndividual Sample Statistics (GPT-4.1):")
@@ -473,6 +476,7 @@ if (
     ax.legend(handles=legend_elements, loc="upper right")
 
     plt.tight_layout()
+    plt.savefig("../plots/resolved_instance_level_dedent.svg", format="svg")
     plt.show()
 
     both_solved = no_compression_solved & full_transform_solved

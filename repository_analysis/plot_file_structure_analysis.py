@@ -18,7 +18,7 @@ def drop_zero_columns(df, columns):
     return [col for col in columns if df[col].sum() > 0]
 
 
-def plot_bar(data, title, ylabel):
+def plot_bar(data, title, ylabel, save_path):
     data = data.sort_values(by="Count", ascending=False)
 
     plt.figure(figsize=(10, 6))
@@ -41,20 +41,21 @@ def plot_bar(data, title, ylabel):
         )
 
     plt.tight_layout()
+    plt.savefig(save_path, format="svg")
     plt.show()
 
 
-def plot_distribution(df, category_cols, title, ylabel):
+def plot_distribution(df, category_cols, title, ylabel, save_path):
     totals = df[category_cols].sum()
     data = pd.DataFrame({"Category": totals.index, "Count": totals.values})
-    plot_bar(data, title, ylabel)
+    plot_bar(data, title, ylabel, save_path)
 
 
-def plot_top5_mean_distribution(df, category_cols, total_col, title, ylabel):
+def plot_top5_mean_distribution(df, category_cols, total_col, title, ylabel, save_path):
     top5 = df.nlargest(5, total_col)
     mean_vals = top5[category_cols].mean()
     data = pd.DataFrame({"Category": mean_vals.index, "Count": mean_vals.values})
-    plot_bar(data, title, ylabel)
+    plot_bar(data, title, ylabel, save_path)
 
 
 def main(lexical_path, structural_path):
@@ -69,6 +70,7 @@ def main(lexical_path, structural_path):
         lex_cols,
         "Lexical Token Distribution",
         "Character Count",
+        "../plots/lexical.svg",
     )
     plot_top5_mean_distribution(
         df_lex,
@@ -76,6 +78,7 @@ def main(lexical_path, structural_path):
         total_col="total_chars",
         title="Lexical Token Distribution (Large Instances)",
         ylabel="Character Count",
+        save_path="../plots/lexical_top5.svg",
     )
 
     # Structural
@@ -86,6 +89,7 @@ def main(lexical_path, structural_path):
         struct_cols,
         "Structural Token Distribution",
         "Character Count",
+        "../plots/structural.svg",
     )
     plot_top5_mean_distribution(
         df_struct,
@@ -93,6 +97,7 @@ def main(lexical_path, structural_path):
         total_col="total_chars",
         title="Structural Token Distribution (Large Instances)",
         ylabel="Character Count",
+        save_path="../plots/structural_top5.svg",
     )
 
 
