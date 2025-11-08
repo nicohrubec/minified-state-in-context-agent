@@ -163,7 +163,7 @@ plt.ylabel("Resolved Percentage (%)")
 plt.title("Performance vs Cost by Transformation")
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("../plots/performance_cost_scatter_individual.svg", format="svg")
+plt.savefig("../plots/performance_cost_scatter_individual.pdf", format="pdf")
 plt.show()
 
 # resolved percentage bar chart
@@ -195,7 +195,7 @@ plt.xticks(rotation=45, ha="right")
 plt.ylim(0, max(df_results["resolved_percentage"]) * 1.15)
 plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
-plt.savefig("../plots/resolved_individual.svg", format="svg")
+plt.savefig("../plots/resolved_individual.pdf", format="pdf")
 plt.show()
 
 # stacked bar chart for cost breakdown
@@ -243,7 +243,7 @@ plt.xticks(
 plt.legend()
 plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
-plt.savefig("../plots/cost_individual.svg", format="svg")
+plt.savefig("../plots/cost_individual.pdf", format="pdf")
 plt.show()
 
 # detailed performance breakdown for each transformation
@@ -334,7 +334,7 @@ plt.legend(title="Outcome", bbox_to_anchor=(1.05, 1), loc="upper left")
 plt.ylim(0, 100)
 plt.grid(True, alpha=0.3, axis="y")
 plt.tight_layout()
-plt.savefig("../plots/performance_detailed_individual.svg", format="svg")
+plt.savefig("../plots/performance_detailed_individual.pdf", format="pdf")
 plt.show()
 
 # Renaming ablation plot
@@ -381,7 +381,7 @@ plt.title("Renaming Identifiers with vs without in-context map")
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("../plots/renaming_ablation.svg", format="svg")
+plt.savefig("../plots/renaming_ablation.pdf", format="pdf")
 plt.show()
 
 print("\nDetailed Performance Breakdown:")

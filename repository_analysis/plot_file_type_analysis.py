@@ -93,7 +93,7 @@ def plot_token_distribution_pie(df: pd.DataFrame, repair_cap: int | None = None)
     centre_circle = plt.Circle((0, 0), 0.32, fc="white")
     fig.gca().add_artist(centre_circle)
     plt.tight_layout(rect=[0, 0, 0.85, 1])
-    plt.savefig("../plots/ranking_repair_code_nl.svg", format="svg")
+    plt.savefig("../plots/ranking_repair_code_nl.pdf", format="pdf")
     plt.show()
 
 
@@ -138,7 +138,7 @@ def plot_mean_file_type_distribution(df):
     ax.set_title("File-Type Token Distribution", fontsize=16)
 
     plt.tight_layout()
-    plt.savefig("../plots/file_type.svg", format="svg")
+    plt.savefig("../plots/file_type.pdf", format="pdf")
     plt.show()
 
 
@@ -173,7 +173,7 @@ def plot_stacked_token_counts_by_repo(df):
     ax.legend(title="File Type", bbox_to_anchor=(1.05, 1), loc="upper left")
 
     plt.tight_layout()
-    plt.savefig("../plots/file_type_per_repo.svg", format="svg")
+    plt.savefig("../plots/file_type_per_repo.pdf", format="pdf")
     plt.show()
 
 

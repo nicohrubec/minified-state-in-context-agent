@@ -41,7 +41,7 @@ def plot_bar(data, title, ylabel, save_path):
         )
 
     plt.tight_layout()
-    plt.savefig(save_path, format="svg")
+    plt.savefig(save_path, format="pdf")
     plt.show()
 
 
@@ -70,7 +70,7 @@ def main(lexical_path, structural_path):
         lex_cols,
         "Lexical Token Distribution",
         "Character Count",
-        "../plots/lexical.svg",
+        "../plots/lexical.pdf",
     )
     plot_top5_mean_distribution(
         df_lex,
@@ -78,7 +78,7 @@ def main(lexical_path, structural_path):
         total_col="total_chars",
         title="Lexical Token Distribution (Large Instances)",
         ylabel="Character Count",
-        save_path="../plots/lexical_top5.svg",
+        save_path="../plots/lexical_top5.pdf",
     )
 
     # Structural
@@ -89,7 +89,7 @@ def main(lexical_path, structural_path):
         struct_cols,
         "Structural Token Distribution",
         "Character Count",
-        "../plots/structural.svg",
+        "../plots/structural.pdf",
     )
     plot_top5_mean_distribution(
         df_struct,
@@ -97,7 +97,7 @@ def main(lexical_path, structural_path):
         total_col="total_chars",
         title="Structural Token Distribution (Large Instances)",
         ylabel="Character Count",
-        save_path="../plots/structural_top5.svg",
+        save_path="../plots/structural_top5.pdf",
     )
 
 

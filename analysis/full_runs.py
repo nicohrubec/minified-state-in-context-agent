@@ -158,7 +158,7 @@ plt.ylim(0, None)
 plt.legend()
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("../plots/full_performance.svg", format="svg")
+plt.savefig("../plots/full_performance.pdf", format="pdf")
 plt.show()
 
 # plot split by difficulty
@@ -208,7 +208,7 @@ plt.ylim(0, None)
 plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=10)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("../plots/full_performance_by_difficulty.svg", format="svg")
+plt.savefig("../plots/full_performance_by_difficulty.pdf", format="pdf")
 plt.show()
 
 # plot split by repository
@@ -249,7 +249,7 @@ plt.ylim(0, None)
 plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=9)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig("../plots/full_performance_by_repository.svg", format="svg")
+plt.savefig("../plots/full_performance_by_repository.pdf", format="pdf")
 plt.show()
 
 print("Summary Table:")
@@ -345,7 +345,7 @@ legend_elements = [
 ax.legend(handles=legend_elements, loc="upper right")
 
 plt.tight_layout()
-plt.savefig("../plots/resolved_instance_level_all.svg", format="svg")
+plt.savefig("../plots/resolved_instance_level_all.pdf", format="pdf")
 plt.show()
 
 both_solved = no_compression_solved & compression_solved
