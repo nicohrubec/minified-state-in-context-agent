@@ -1,6 +1,4 @@
-# agent-state-management
-
-Repository for my master thesis on SWE agent state management.
+# Direct-Solve State-in-Context Agent with Minification
 
 ## Setup
 
