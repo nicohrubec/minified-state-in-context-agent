@@ -1,5 +1,7 @@
 # Direct-Solve State-in-Context Agent with Minification
 
+[![DOI](https://zenodo.org/badge/1026635044.svg)](https://doi.org/10.5281/zenodo.17908092)
+
 ## Setup
 
 1. Create a virtual environment:
@@ -123,3 +125,18 @@ python3 -m swebench.harness.run_evaluation \
 ```
 
 The agent predictions are stored in the `data/agent_results/` directory. The evaluation will test the generated patches against the actual repositories to verify if the issues are resolved.
+
+## Citation
+
+```bibtex
+@software{nicolas_hrubec_2025_17908093,
+  author    = {Nicolas Hrubec},
+  title     = {nicohrubec/minified-state-in-context-agent: v0.1.0-dev},
+  month     = dec,
+  year      = 2025,
+  publisher = {Zenodo},
+  version   = {v0.1.0-dev},
+  doi       = {10.5281/zenodo.17908093},
+  url       = {https://doi.org/10.5281/zenodo.17908093}
+}
+```
