@@ -1,6 +1,6 @@
 # Direct-Solve State-in-Context Agent with Minification
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17908093.svg)](https://doi.org/10.5281/zenodo.17908093)
+[![DOI](https://zenodo.org/badge/1026635044.svg)](https://doi.org/10.5281/zenodo.17908092)
 
 ## Setup
 
